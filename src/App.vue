@@ -4,6 +4,7 @@
 import { onMounted, ref, Ref } from 'vue';
 import Card from "./components/Card.vue";
 import NewCardForm from "./components/NewCardForm.vue";
+import Pomodoro from "./components/Pomodoro.vue";
 
 interface CardInterface {
   id: string,
@@ -43,15 +44,12 @@ function removeCard(card_id: string) {
 </script>
 
 <template>
+  <div class="pomodoro-container">
+    <Pomodoro />
+  </div>
   <div class="cards-container">
     <div v-for="card in cards" :key="card.id">
-      <Card
-        @remove-card="removeCard"
-        :id="card.id"
-        :title="card.title"
-        :text="card.text"
-        :url="card.url"
-      />
+      <Card @remove-card="removeCard" :id="card.id" :title="card.title" :text="card.text" :url="card.url" />
     </div>
   </div>
   <div class="card-form-container">
@@ -61,14 +59,17 @@ function removeCard(card_id: string) {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Dosis&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
 body {
   background-color: #df57bb2e;
 }
+
 #app {
   font-family: 'Dosis', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -77,19 +78,31 @@ body {
   color: #2c3e50;
   margin-top: 60px;
 }
+
+.pomodoro-container {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: fit-content;
+  margin-bottom: 15px;
+}
+
 .cards-container {
   display: grid;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: repeat(auto-fit, 20rem);
   row-gap: 10px;
   column-gap: 10px;
   justify-content: center;
   margin-bottom: 20px;
 }
+
 .cards-container .card {
   height: 100%;
 }
+
 .card-form-container {
-  position: absolute;
+  position: relative;
+  width: fit-content;
   left: 50%;
   transform: translateX(-50%);
 }

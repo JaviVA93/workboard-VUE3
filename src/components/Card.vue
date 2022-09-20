@@ -36,7 +36,7 @@ function removeCard() {
   <div class="card" :card-id="props.id">
     <h1>{{ title }}</h1>
     <span>{{ text }}</span>
-    <button @click="goTo">And a button</button>
+    <button @click="goTo">Go to link</button>
     <button @click="removeCard">Remove card</button>
   </div>
 </template>
@@ -47,7 +47,7 @@ function removeCard() {
   flex-direction: column;
   align-items: flex-start;
   gap: 20px;
-  width: 25vw;
+  width: 20rem;
   padding: 10px 30px;
   border: 0;
   box-shadow: -2px 2px 7px #e83a8e;
