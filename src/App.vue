@@ -46,6 +46,7 @@ function removeCard(card_id: string) {
 <template>
   <div class="pomodoro-container">
     <Pomodoro />
+    <Pomodoro />
   </div>
   <div class="cards-container">
     <div v-for="card in cards" :key="card.id">
@@ -83,8 +84,11 @@ body {
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  width: fit-content;
   margin-bottom: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 25rem);
+  gap: 1rem;
+  justify-content: center;
 }
 
 .cards-container {

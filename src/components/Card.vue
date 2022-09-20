@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
 import { gsap } from 'gsap';
+import { ref } from 'vue';
 
 const cardEmit = defineEmits<{
   (e: "removeCard", cardId: string): void;
@@ -13,6 +14,8 @@ const props = defineProps({
   url: String,
 });
 
+const card = ref<HTMLElement | null>(null);
+
 function goTo() {
   console.log("goTo");
   if (props.url) window.location.href = props.url;
@@ -21,8 +24,7 @@ function goTo() {
 function removeCard() {
   let tl = gsap.timeline();
   tl.call(() => {
-    let card = document.querySelector(`.card[card-id="${props.id}"]`);
-    card?.classList.add('to-remove');
+    card.value?.classList.add('to-remove');
   });
   tl.to(`.card[card-id="${props.id}"]`, { width: 0, opacity: 0, duration: 0.25, ease: "power3.inOut" });
   tl.call(() => {
@@ -33,7 +35,8 @@ function removeCard() {
 </script>
 
 <template>
-  <div class="card" :card-id="props.id">
+  <!-- <div class="card" :card-id="props.id" ref="card"> -->
+  <div class="card" :card-id="props.id" ref="card">
     <h1>{{ title }}</h1>
     <span>{{ text }}</span>
     <button @click="goTo">Go to link</button>

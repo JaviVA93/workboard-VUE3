@@ -1,24 +1,22 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import { ref } from 'vue';
+
+const titleInput = ref<HTMLInputElement | null>(null);
+const textInput = ref<HTMLInputElement | null>(null);
+const urlInput = ref<HTMLInputElement | null>(null);
+
 const cardFormEmit = defineEmits<{
   (e: "createCard", title: string, text: string, url: string): void;
 }>();
 
 function createCard() {
-  // let title = (<HTMLInputElement>(
-  //   document.querySelector(".new-card-form .form-title input")
-  // )).value;
-  let title_elem = document.querySelector(".new-card-form .form-title input") as HTMLInputElement;
-  let title = (title_elem && title_elem.value !== '') ? title_elem.value : 'title not set';
-  //title = (title === '') ? 'title not set' : title;
-  let text = (<HTMLInputElement>(
-    document.querySelector(".new-card-form .form-text input")
-  )).value;
-  text = (text === '') ? 'text not set' : text;
-  let url = (<HTMLInputElement>(
-    document.querySelector(".new-card-form .form-url input")
-  )).value;
-  url = (url === "") ? "https://www.youtube.com/watch?v=dQw4w9WgXcQ" : url;
+
+  let title = (titleInput.value && titleInput.value.value !== '') ? titleInput.value.value : 'title not set';
+
+  let text = (textInput.value && textInput.value.value !== '') ? textInput.value.value : 'Text not set';
+
+  let url = (urlInput.value && urlInput.value.value !== '') ?
+    urlInput.value.value : 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 
   console.log([title, text, url])
   cardFormEmit("createCard", title, text, url);
@@ -26,12 +24,9 @@ function createCard() {
 }
 
 function clearInputs() {
-  let inputs = document.querySelectorAll<HTMLInputElement>(
-    ".new-card-form input"
-  );
-  inputs.forEach((input) => {
-    input.value = "";
-  });
+  if (titleInput.value) titleInput.value.value = '';
+  if (textInput.value) textInput.value.value = '';
+  if (urlInput.value) urlInput.value.value = '';
 }
 
 
@@ -48,15 +43,15 @@ const soft_grey = ''
       <h1>Create a new card.</h1>
       <div class="form-title">
         <span>Card title</span>
-        <input type="text" />
+        <input type="text" ref="titleInput" />
       </div>
       <div class="form-text">
         <span>Card text</span>
-        <input type="text" />
+        <input type="text" ref="textInput" />
       </div>
       <div class="form-url">
         <span>Card URL</span>
-        <input type="text" />
+        <input type="text" ref="urlInput" />
       </div>
       <button @click="createCard">Create card</button>
     </div>

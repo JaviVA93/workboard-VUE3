@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 let pomo_vars = {
     status: '',
@@ -13,17 +13,20 @@ let pomo_vars = {
     },
 }
 
+const pomoTime = ref<HTMLElement | null>(null);
+const pomoStart = ref<HTMLElement | null>(null);
+const pomoStop = ref<HTMLElement | null>(null);
+
 function startPauseResumePomodoro() {
-    let start_btn = document.querySelector('#pom_start') as HTMLButtonElement;
     if (pomo_vars.status === 'running') {
         pomo_vars.status = 'pause';
-        if (start_btn) start_btn.innerText = 'Resume';
+        if (pomoStart.value) pomoStart.value.innerText = 'Resume';
     }
     else {
         if (pomo_vars.status === '' || pomo_vars.status === 'end')
             pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
         pomo_vars.status = 'running';
-        if (start_btn) start_btn.innerText = 'Pause';
+        if (pomoStart.value) pomoStart.value.innerText = 'Pause';
         updatePomodoro();
     }
 }
@@ -34,8 +37,7 @@ function stopPomodoro() {
 
     printTime();
 
-    let start_btn = document.querySelector('#pom_start') as HTMLButtonElement;
-    if (start_btn) start_btn.innerText = 'Start';
+    if (pomoStart.value)  pomoStart.value.innerText = 'Start';
 }
 
 function calculateTimeRemain() {
@@ -48,9 +50,8 @@ function calculateTimeRemain() {
 }
 
 function printTime() {
-    let time_element: HTMLSpanElement = document.querySelector('.pomo_time');
-    if (time_element) time_element.innerText = 
-        `${pomo_vars.timeRemain.minutes.toString()}:${pomo_vars.timeRemain.seconds.toString()}`;
+    if (pomoTime.value)
+        pomoTime.value.innerText = `${pomo_vars.timeRemain.minutes.toString()}:${pomo_vars.timeRemain.seconds.toString()}`;
 }
 
 function updatePomodoro() {
@@ -67,19 +68,16 @@ function updatePomodoro() {
     calculateTimeRemain();
     printTime();
 
-    let btn = document.querySelector('#pom_start');
     if (pomo_vars.timeRemain.seconds <= 0 && pomo_vars.timeRemain.minutes <= 0) {
         pomo_vars.status = 'end';
-        if (btn) btn.textContent = 'Start';
+        if (pomoStart.value) pomoStart.value.textContent = 'Start';
     }
     else if (pomo_vars.status === 'pause') {
-        if (btn)
-            btn.textContent = 'Resume'
+        if (pomoStart.value) pomoStart.value.textContent = 'Resume'
         return;
     }
     else {
-        if (btn)
-            btn.textContent = 'Pause';
+        if (pomoStart.value) pomoStart.value.textContent = 'Pause';
         pomo_vars.status = 'running';
         setTimeout(() => {
             updatePomodoro();
@@ -95,10 +93,10 @@ onMounted(() => {
 <template>
     <div class="pomo-card">
         <h1>POMODORO</h1>
-        <span class="pomo_time"></span>
+        <span class="pomo_time" ref="pomoTime"></span>
         <div class="pom_btns_wrapper">
-            <button id="pom_start" @click="startPauseResumePomodoro">Start</button>
-            <button id="pom_stop" @click="stopPomodoro">Stop</button>
+            <button id="pomo_start" ref="pomoStart" @click="startPauseResumePomodoro">Start</button>
+            <button id="pomo_stop" ref="pomoStop" @click="stopPomodoro">Stop</button>
         </div>
     </div>
 </template>
@@ -111,7 +109,7 @@ onMounted(() => {
 
     background-color: aquamarine;
 
-    width: 25vw;
+    width: 25rem;
     padding: 15px;
 
     border-radius: 5px;
