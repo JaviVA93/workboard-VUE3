@@ -97,16 +97,9 @@ function setPlayPauseButtonBackground(value: string) {
 }
 
 function updatePomodoro() {
-    console.log(`updating pomodoro:
-    Time remaining: ${pomo_vars.timeRemain.minutes}:${pomo_vars.timeRemain.seconds},
-    status: ${pomo_vars.status}`);
-
     if (pomo_vars.status === 'pause' || pomo_vars.status === 'stop' || pomo_vars.status === 'end') {
         return;
     }
-
-    if (pomo_vars.status === 'stop')
-        return;
 
     calculateTimeRemain();
     printTime();
@@ -114,22 +107,43 @@ function updatePomodoro() {
     if (pomo_vars.timeRemain.seconds <= 0 && pomo_vars.timeRemain.minutes <= 0) {
         pomo_vars.status = 'end';
         pomoAlarm.play();
+        pomoEndNotification();
         setPlayPauseButtonBackground('play');
         if (pomoInterval) clearInterval(pomoInterval);
     }
-    else if (pomo_vars.status === 'pause') {
+    else if (pomo_vars.status === 'pause')
         setPlayPauseButtonBackground('play');
-        return;
-    }
-    else {
+    else
         setPlayPauseButtonBackground('pause');
+}
+
+function getNotificationPermission() {
+    return (window.Notification) ? window.Notification.permission : null;
+}
+
+function requestNotificatinoPermission() {
+    let notifPermission = getNotificationPermission();
+    if (notifPermission !== 'default')
+        return;
+
+    window.Notification.requestPermission();
+}
+
+function pomoEndNotification() {
+    let notifPermission = getNotificationPermission();
+    if (notifPermission === 'granted') {
+        let notification = new Notification('Pomodoro finished! Time for a break :)');
+        notification.onclick = () => {
+            parent.focus();
+            window.focus();
+        }
     }
 }
 
 onMounted(() => {
     pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
     printTime();
-
+    requestNotificatinoPermission();
     setPlayPauseButtonBackground('play');
 });
 
@@ -163,7 +177,8 @@ onMounted(() => {
 }
 
 .pomo-time {
-    font-size: 32px;
+    font-size: 75px;
+    font-weight: bold;
 }
 
 .pom-btns-wrapper {
@@ -176,6 +191,8 @@ onMounted(() => {
     height: 35px;
     background: v-bind('cssVars.playPauseBackground');
     background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     border: 0;
 }
 
@@ -184,6 +201,8 @@ onMounted(() => {
     height: 35px;
     background: v-bind('cssVars.stopBackground');
     background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     border: 0;
 }
 </style>
