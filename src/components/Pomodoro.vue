@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue';
 import playSvg from '../assets/play-button-round-icon.svg';
 import pauseSvg from '../assets/pause-button-icon.svg';
 import stopSvg from '../assets/stop-button-round-icon.svg';
+import clockAlarm from '../assets/clock-alarm.mp3';
 
 let pomo_vars = {
     status: '',
@@ -28,6 +29,8 @@ const cssVars = ref({
 
 let pomoInterval: number | undefined = undefined;
 
+const pomoAlarm = new Audio(clockAlarm);
+
 function startPauseResumePomodoro() {
     if (pomo_vars.status === 'running') {
         pomo_vars.status = 'pause';
@@ -48,6 +51,8 @@ function startPauseResumePomodoro() {
 
 function stopPomodoro() {
     pomo_vars.status = 'stop';
+    pomoAlarm.pause();
+    pomoAlarm.currentTime = 0;
     pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
     if (pomoInterval) clearInterval(pomoInterval);
     printTime();
@@ -108,6 +113,7 @@ function updatePomodoro() {
 
     if (pomo_vars.timeRemain.seconds <= 0 && pomo_vars.timeRemain.minutes <= 0) {
         pomo_vars.status = 'end';
+        pomoAlarm.play();
         setPlayPauseButtonBackground('play');
         if (pomoInterval) clearInterval(pomoInterval);
     }
@@ -119,12 +125,12 @@ function updatePomodoro() {
         setPlayPauseButtonBackground('pause');
     }
 }
+
 onMounted(() => {
     pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
     printTime();
 
     setPlayPauseButtonBackground('play');
-    console.log(playSvg);
 });
 
 </script>
