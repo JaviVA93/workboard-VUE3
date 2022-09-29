@@ -5,6 +5,7 @@ import { onMounted, ref, Ref } from 'vue';
 import Card from "./components/Card.vue";
 import NewCardForm from "./components/NewCardForm.vue";
 import Pomodoro from "./components/Pomodoro.vue";
+import Spotify from './components/Spotify.vue';
 
 interface CardInterface {
   id: string,
@@ -44,6 +45,9 @@ function removeCard(card_id: string) {
 </script>
 
 <template>
+  <div class="spotify-container">
+    <Spotify />
+  </div>
   <div class="pomodoro-container">
     <Pomodoro />
     <Pomodoro />
