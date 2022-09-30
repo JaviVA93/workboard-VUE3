@@ -27,7 +27,7 @@ const cssVars = ref({
     stopBackground: `url("${stopSvg}")`,
 });
 
-let pomoInterval: number | undefined = undefined;
+let pomoInterval: any = undefined;
 
 const pomoAlarm = new Audio(clockAlarm);
 

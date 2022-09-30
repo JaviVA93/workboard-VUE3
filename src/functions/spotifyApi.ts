@@ -1,4 +1,17 @@
+/**
+ * Generates a random string containing numbers and letters
+ * @param  {number} length The length of the string
+ * @return {string} The generated string
+ */
+ function generateRandomString(length: Number) {
+    var text = '';
+    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
+    for (var i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+};
 
 export async function getToken() {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
@@ -42,10 +55,9 @@ export async function getTrack(track_id: string, token: string) {
 }
 
 export function createAuthorizedURL() {
-    let scope = 'streaming user-read-private user-read-email',
+    let scope = 'streaming user-read-playback-state user-modify-playback-state user-read-private user-read-email',
         redirect_uri = 'http://localhost:3000/',
-        client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
-        state = 'some-state-of-my-choice';
+        client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 
     let authorizeURL = 'https://accounts.spotify.com/authorize?' +
         encodeURI('response_type=code' + '&' +
@@ -61,12 +73,12 @@ export function createAuthorizedURL() {
 
 export async function requestAccessToken(code: string) {
     const client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
-        client_secret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
-    const form_data = new URLSearchParams({
-        code: code,
-        redirect_uri: 'http://localhost:3000/',
-        grant_type: 'authorization_code'
-    });
+        client_secret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET,
+        form_data = new URLSearchParams({
+            code: code,
+            redirect_uri: 'http://localhost:3000/',
+            grant_type: 'authorization_code'
+        });
     const request = await fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: {
@@ -75,23 +87,160 @@ export async function requestAccessToken(code: string) {
         },
         body: form_data
     });
-    
-    const req_data = await request.json();
-    console.log(req_data);
-    return req_data
+
+    return await request.json();
 }
 
-/**
- * Generates a random string containing numbers and letters
- * @param  {number} length The length of the string
- * @return {string} The generated string
- */
-function generateRandomString(length: Number) {
-    var text = '';
-    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+export async function getPlaybackState(token: string) {
+    const request = await fetch('https://api.spotify.com/v1/me/player', {
+        method: 'GET',
+        headers: {
+            'Authorization': "Bearer " + token,
+            'Content-Type': 'application/json'
+        }
+    });
 
-    for (var i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    if (request.status === 200)
+        return await request.json();
+    else if (request.status === 204)
+        return {
+            error: {
+                status: 204,
+                message: 'Playback not available or active'
+            }
+        };
+    else {
+        return await request.json();
     }
-    return text;
-};
+}
+
+export async function pausePlayback(token: string) {
+
+    // Check if the playbackState is currently playing
+    const playback_state = await getPlaybackState(token);
+    if (playback_state.error || playback_state.is_playing === false)
+        return false;
+
+    const request = await fetch(`https://api.spotify.com/v1/me/player/pause`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': "Bearer " + token,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (request.status === 204)
+        return true;
+    else {
+        let body = await request.json();
+        console.error('pausePlayback api request error: ' + request.status);
+        console.error(body);
+        return false;
+    }
+}
+
+export async function startResumePlayback(token: string) {
+
+    // Check if the playbackState is not currently playing
+    const playback_state = await getPlaybackState(token);
+    if (playback_state.error || playback_state.is_playing === true)
+        return false;
+
+
+    const request = await fetch(`https://api.spotify.com/v1/me/player/play`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': "Bearer " + token,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (request.status === 204)
+        return true;
+    else {
+        let body = await request.json();
+        console.error('startResumePlayback api request error: ' + request.status);
+        console.error(body);
+        return false;
+    }
+}
+
+export async function playPausePlayback(token: string) {
+    try {
+        const playback_state = await getPlaybackState(token);
+        if (playback_state.error)
+            return;
+
+        let req_url = (playback_state.is_playing === true) ?
+            'https://api.spotify.com/v1/me/player/pause' : 'https://api.spotify.com/v1/me/player/play'
+
+        const request = await fetch(req_url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': "Bearer " + token,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (request.status === 204)
+            return true;
+        else {
+            const body = await request.json();
+            console.error('playPausePlayback api request error: ' + request.status);
+            console.error(body);
+            return false;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export async function skipToNextPlayback(token: string) {
+    const request = await fetch('https://api.spotify.com/v1/me/player/next', {
+        method: 'POST',
+        headers: {
+            'Authorization': "Bearer " + token,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (request.status === 204)
+        return true;
+    else {
+        const body = await request.json();
+        console.error('skipToNextPlayback api request error: ' + request.status);
+        console.error(body);
+        return false;
+    }
+}
+
+export async function skipToPreviousPlayback(token: string) {
+    const request = await fetch('https://api.spotify.com/v1/me/player/previous', {
+        method: 'POST',
+        headers: {
+            'Authorization': "Bearer " + token,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (request.status === 204)
+        return true;
+    else {
+        const body = await request.json();
+        console.error('skipToNextPlayback api request error: ' + request.status);
+        console.error(body);
+        return false;
+    }
+}
+
+export async function getCurrentPlayingTrack(token: string) {
+    const request = await fetch('https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode', {
+        method: 'GET',
+        headers: {
+            'Authorization': "Bearer " + token,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    return await request.json();
+}
