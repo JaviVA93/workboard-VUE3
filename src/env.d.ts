@@ -11,4 +11,5 @@ interface Window {
   Spotify: any;
   spotify_player: any;
   onSpotifyWebPlaybackSDKReady: () => void;
+  spotifyData: any;
 }

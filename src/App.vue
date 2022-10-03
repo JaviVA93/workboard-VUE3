@@ -50,15 +50,16 @@ function removeCard(card_id: string) {
   </div>
   <div class="pomodoro-container">
     <Pomodoro />
-    <Pomodoro />
   </div>
-  <div class="cards-container">
-    <div v-for="card in cards" :key="card.id">
-      <Card @remove-card="removeCard" :id="card.id" :title="card.title" :text="card.text" :url="card.url" />
+  <div class="cards-wrapper">
+    <div class="cards-container">
+      <div v-for="card in cards" :key="card.id">
+        <Card @remove-card="removeCard" :id="card.id" :title="card.title" :text="card.text" :url="card.url" />
+      </div>
     </div>
-  </div>
-  <div class="card-form-container">
-    <NewCardForm @create-card="createCard" />
+    <div class="card-form-container">
+      <NewCardForm @create-card="createCard" />
+    </div>
   </div>
 </template>
 
@@ -81,7 +82,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 20px;
 }
 
 .pomodoro-container {
@@ -95,13 +96,27 @@ body {
   justify-content: center;
 }
 
+.cards-wrapper {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 98%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 5px;
+  padding: 15px 0; 
+}
+
 .cards-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, 20rem);
   row-gap: 10px;
   column-gap: 10px;
   justify-content: center;
-  margin-bottom: 20px;
 }
 
 .cards-container .card {

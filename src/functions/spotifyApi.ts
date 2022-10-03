@@ -91,6 +91,25 @@ export async function requestAccessToken(code: string) {
     return await request.json();
 }
 
+async function refreshAccessToken(refresh_token: string, callback: any) {
+    const client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
+        client_secret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET,
+        form_data = new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: refresh_token
+        });
+    const request = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret),
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: form_data
+    });
+
+    return await request.json();
+}
+
 export async function getPlaybackState(token: string) {
     const request = await fetch('https://api.spotify.com/v1/me/player', {
         method: 'GET',
@@ -109,6 +128,13 @@ export async function getPlaybackState(token: string) {
                 message: 'Playback not available or active'
             }
         };
+    else if (request.status === 401) {
+        let res_body = await request.json();
+        if (res_body.message && res_body.message === 'The access token expired') {
+            let refres_token = JSON.parse(window.localStorage.spotify_token).refresh_token;
+            refreshAccessToken(refres_token);
+        }
+    }
     else {
         return await request.json();
     }
