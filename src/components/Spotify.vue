@@ -253,6 +253,7 @@ onMounted(() => {
 
 .player-artist-name {
     font-size: 14px;
+    font-weight: 700;
 }
 
 .player-track-img {
