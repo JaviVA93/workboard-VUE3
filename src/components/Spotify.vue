@@ -23,8 +23,9 @@ const player_wrapper = ref<HTMLDivElement | null>(null),
 let is_paused = true;
 
 
-function redirectAuthorizedURL() {
-    let authorize_url = createAuthorizedURL();
+async function redirectAuthorizedURL() {
+    let [authorize_url, rand_state] = await createAuthorizedURL();
+    window.localStorage.spotify_auth_code_verifier = rand_state;
     window.location.href = authorize_url;
 }
 
@@ -48,11 +49,11 @@ async function checkSpotifyAuthorizationCode() {
 
 function playPauseTrack() {
     playPausePlayback(JSON.parse(window.localStorage.spotify_token).access_token);
-    is_paused = !is_paused;
-    if (is_paused)
-        setPlayPauseButton('pause');
-    else
-        setPlayPauseButton('play');
+    // is_paused = !is_paused;
+    // if (is_paused)
+    //     setPlayPauseButton('pause');
+    // else
+    //     setPlayPauseButton('play');
 }
 
 function skipToNextTrack() {
@@ -63,19 +64,14 @@ function skipToPreviousTrack() {
     skipToPreviousPlayback(JSON.parse(window.localStorage.spotify_token).access_token);
 }
 
-function printCurrentPlayingData() {
+async function printCurrentPlayingData() {
     let print_int = setInterval(async () => {
         try {
-            updatePlaybackStateData();
+            await updatePlaybackStateData();
 
-            let token = JSON.parse(window.localStorage.spotify_token).access_token;
-            let v = await getCurrentPlayingTrack(token);
-            if (!player_song_name.value)
-                return;
-            if (v.error)
-                console.log(v.error);
-            else if (v.item)
-                player_song_name.value.innerText = v.item.name;
+            printCurrentTrack();
+
+            setPlayPauseButton();
         } catch (error) {
             console.error(error);
             clearInterval(print_int);
@@ -90,14 +86,24 @@ async function updatePlaybackStateData() {
     window.spotifyData.playbackState = playback_state_data;
 }
 
-function setPlayPauseButton(type: string) {
-    if (type === 'play') {
-        if (play_btn.value && play_btn_svg.value)
-            play_btn.value.innerHTML = play_btn_svg.value.$el.outerHTML;
+function printCurrentTrack() {
+    if (!window.spotifyData || !window.spotifyData.playbackState) return;
+    
+    if (!player_song_name.value) return;
+
+    player_song_name.value.innerText = window.spotifyData.playbackState.item.name;
+}
+
+function setPlayPauseButton() {
+    if (!window.spotifyData || !window.spotifyData.playbackState) return;
+
+    if (window.spotifyData.playbackState.is_playing === false) {
+        pause_btn_svg.value?.$el.classList.add('hidde');
+        play_btn_svg.value?.$el.classList.remove('hidde');
     }
     else {
-        if (play_btn.value && pause_btn_svg.value)
-            play_btn.value.innerHTML = pause_btn_svg.value.$el.outerHTML;
+        play_btn_svg.value?.$el.classList.add('hidde');
+        pause_btn_svg.value?.$el.classList.remove('hidde');
     }
 }
 
@@ -106,7 +112,6 @@ onMounted(() => {
         checkSpotifyAuthorizationCode();
     else {
         printCurrentPlayingData();
-        setPlayPauseButton('play');
         login_btn.value?.classList.add('hidde');
         player_wrapper.value?.classList.remove('hidde');
     }
@@ -126,7 +131,7 @@ onMounted(() => {
                 </button>
                 <button class="play-btn" ref="play_btn" @click="playPauseTrack">
                     <SvgPlayButton ref="play_btn_svg" />
-                    <SvgPauseButton ref="pause_btn_svg" />
+                    <SvgPauseButton class="hidde" ref="pause_btn_svg" />
                 </button>
                 <button ref="next_btn" @click="skipToNextTrack">
                     <SvgNextButton />
