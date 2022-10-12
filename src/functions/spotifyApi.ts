@@ -91,7 +91,7 @@ export async function requestAccessToken(code: string) {
     return await request.json();
 }
 
-async function refreshAccessToken(refresh_token: string, callback: any) {
+async function refreshAccessToken(refresh_token: string) {
     const client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
         client_secret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET,
         form_data = new URLSearchParams({
@@ -108,6 +108,21 @@ async function refreshAccessToken(refresh_token: string, callback: any) {
     });
 
     return await request.json();
+}
+
+async function refreshAccessTokenHadler(refres_token: string, callback: any) {
+    let refreshed_access_token = await refreshAccessToken(refres_token);
+    if (refreshed_access_token.error) {
+        // CONTROL REFRESH TOKEN ERRORS
+    }
+
+    let spotify_token = (window.localStorage.spotify_token) ? 
+        JSON.parse(window.localStorage.spotify_token) : {};
+    Object.entries(refreshed_access_token).forEach( ([key, value]) => {
+        spotify_token[key] = value;
+    });
+    window.localStorage.setItem('spotify_token', JSON.stringify(spotify_token));
+    callback(refreshed_access_token.access_token);
 }
 
 export async function getPlaybackState(token: string) {
@@ -130,9 +145,9 @@ export async function getPlaybackState(token: string) {
         };
     else if (request.status === 401) {
         let res_body = await request.json();
-        if (res_body.message && res_body.message === 'The access token expired') {
+        if (res_body.error && res_body.error.message === 'The access token expired') {
             let refres_token = JSON.parse(window.localStorage.spotify_token).refresh_token;
-            refreshAccessToken(refres_token);
+            refreshAccessTokenHadler(refres_token, getPlaybackState);
         }
     }
     else {

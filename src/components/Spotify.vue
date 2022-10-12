@@ -5,10 +5,10 @@ import {
     getCurrentPlayingTrack, getPlaybackState
 } from '../functions/spotifyApi';
 
-import SvgPlayButton from './Assets/SvgPlayButton.vue';
-import SvgPauseButton from './Assets/SvgPauseButton.vue';
-import SvgBackButton from './Assets/SvgBackButton.vue';
-import SvgNextButton from './Assets/SvgNextButton.vue';
+import SvgPlayButton from './assets/SvgPlayButton.vue';
+import SvgPauseButton from './assets/SvgPauseButton.vue';
+import SvgBackButton from './assets/SvgBackButton.vue';
+import SvgNextButton from './assets/SvgNextButton.vue';
 
 
 const player_wrapper = ref<HTMLDivElement | null>(null),
