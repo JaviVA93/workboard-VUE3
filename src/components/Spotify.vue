@@ -15,6 +15,7 @@ const player_wrapper = ref<HTMLDivElement | null>(null),
     login_btn = ref<HTMLButtonElement | null>(null),
     player_song_name = ref<HTMLElement | null>(null),
     player_artis = ref<HTMLElement | null>(null),
+    player_track_img = ref<HTMLImageElement | null>(null),
     next_btn = ref<HTMLButtonElement | null>(null),
     play_btn = ref<HTMLButtonElement | null>(null),
     prev_btn = ref<HTMLButtonElement | null>(null),
@@ -49,11 +50,6 @@ async function checkSpotifyAuthorizationCode() {
 
 function playPauseTrack() {
     playPausePlayback(JSON.parse(window.localStorage.spotify_token).access_token);
-    // is_paused = !is_paused;
-    // if (is_paused)
-    //     setPlayPauseButton('pause');
-    // else
-    //     setPlayPauseButton('play');
 }
 
 function skipToNextTrack() {
@@ -70,6 +66,8 @@ async function printCurrentPlayingData() {
             await updatePlaybackStateData();
 
             printCurrentTrack();
+            printCurrentArtist();
+            printCurrentTrackImg();
 
             setPlayPauseButton();
         } catch (error) {
@@ -88,10 +86,31 @@ async function updatePlaybackStateData() {
 
 function printCurrentTrack() {
     if (!window.spotifyData || !window.spotifyData.playbackState) return;
-    
-    if (!player_song_name.value) return;
 
-    player_song_name.value.innerText = window.spotifyData.playbackState.item.name;
+    let track_name = (window.spotifyData.playbackState.error) ? 'N/A' : window.spotifyData.playbackState.item.name
+    if (player_song_name.value)
+        player_song_name.value.innerText = track_name;
+}
+
+function printCurrentArtist() {
+    if (!window.spotifyData || !window.spotifyData.playbackState) return;
+
+    let artists = '';
+    if (window.spotifyData.playbackState.error)
+        artists = 'N/A';
+    else
+        window.spotifyData.playbackState.item.artists.forEach((a, i) => {
+            artists = (i === 0) ? a.name : `${artists}, ${a.name}`;
+        });
+    if (player_artis.value)
+        player_artis.value.innerText = artists;
+}
+
+function printCurrentTrackImg() {
+    if (!window.spotifyData || !window.spotifyData.playbackState) return;
+
+    if (!window.spotifyData.playbackState.error)
+        player_track_img.value?.setAttribute('src', window.spotifyData.playbackState.item.album.images[1].url)
 }
 
 function setPlayPauseButton() {
@@ -120,23 +139,26 @@ onMounted(() => {
 </script>
 <template>
     <div class="spotify-card">
-        <img class="spotify-logo" src="../assets/spotify_icon.png" />
+        <img class="spotify-logo" src="../assets/spotify_icon.png" alt="Spotify logo"/>
         <button class="spotify-login-btn" @click="redirectAuthorizedURL" ref="login_btn">Log in</button>
         <div class="player hidde" ref="player_wrapper">
-            <h2 class="player-song-name" ref="player_song_name"></h2>
-            <span class="player-artist-name" ref="player_artis"></span>
-            <div class="player-buttons" ref="player_buttons">
-                <button ref="prev_btn" @click="skipToPreviousTrack">
-                    <SvgBackButton />
-                </button>
-                <button class="play-btn" ref="play_btn" @click="playPauseTrack">
-                    <SvgPlayButton ref="play_btn_svg" />
-                    <SvgPauseButton class="hidde" ref="pause_btn_svg" />
-                </button>
-                <button ref="next_btn" @click="skipToNextTrack">
-                    <SvgNextButton />
-                </button>
+            <div class="player_left">
+                <h2 class="player-song-name" ref="player_song_name"></h2>
+                <span class="player-artist-name" ref="player_artis"></span>
+                <div class="player-buttons" ref="player_buttons">
+                    <button ref="prev_btn" @click="skipToPreviousTrack">
+                        <SvgBackButton />
+                    </button>
+                    <button class="play-btn" ref="play_btn" @click="playPauseTrack">
+                        <SvgPlayButton ref="play_btn_svg" />
+                        <SvgPauseButton class="hidde" ref="pause_btn_svg" />
+                    </button>
+                    <button ref="next_btn" @click="skipToNextTrack">
+                        <SvgNextButton />
+                    </button>
+                </div>
             </div>
+            <img src="../assets/vinilo.png" ref="player_track_img" class="player-track-img" />
         </div>
     </div>
 </template>
@@ -188,13 +210,28 @@ onMounted(() => {
 
 .player {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    margin-left: 40px;
+    width: 100%;
+}
+
+.player_left {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
     gap: 10px;
+    width: 50%;
 }
 
 .player-artist-name {
     font-size: 14px;
+}
+
+.player-track-img {
+    width: 150px;
+    height: auto;
+    margin-left: auto;
+    margin-right: 50px;
 }
 
 .player-buttons {
@@ -212,7 +249,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 50px;
+    width: 45px;
     background-color: unset;
 }
 
