@@ -85,6 +85,14 @@ body {
   margin-top: 20px;
 }
 
+.spotify-container {
+  width: fit-content;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 15px;
+}
+
 .pomodoro-container {
   position: relative;
   left: 50%;
