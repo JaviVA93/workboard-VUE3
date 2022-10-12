@@ -9,6 +9,7 @@ import SvgPlayButton from './assets/SvgPlayButton.vue';
 import SvgPauseButton from './assets/SvgPauseButton.vue';
 import SvgBackButton from './assets/SvgBackButton.vue';
 import SvgNextButton from './assets/SvgNextButton.vue';
+import VinilImg from '../assets/vinilo.png';
 
 
 const player_wrapper = ref<HTMLDivElement | null>(null),
@@ -99,7 +100,7 @@ function printCurrentArtist() {
     if (window.spotifyData.playbackState.error)
         artists = 'N/A';
     else
-        window.spotifyData.playbackState.item.artists.forEach((a, i) => {
+        window.spotifyData.playbackState.item.artists.forEach((a: any, i: number) => {
             artists = (i === 0) ? a.name : `${artists}, ${a.name}`;
         });
     if (player_artis.value)
@@ -110,7 +111,9 @@ function printCurrentTrackImg() {
     if (!window.spotifyData || !window.spotifyData.playbackState) return;
 
     if (!window.spotifyData.playbackState.error)
-        player_track_img.value?.setAttribute('src', window.spotifyData.playbackState.item.album.images[1].url)
+        player_track_img.value?.setAttribute('src', window.spotifyData.playbackState.item.album.images[1].url);
+    else if (player_track_img.value?.getAttribute('src') !== VinilImg)
+        player_track_img.value?.setAttribute('src', VinilImg);
 }
 
 function setPlayPauseButton() {
@@ -232,6 +235,8 @@ onMounted(() => {
     height: auto;
     margin-left: auto;
     margin-right: 50px;
+    border: 1px solid black;
+    border-radius: 10px;
 }
 
 .player-buttons {
