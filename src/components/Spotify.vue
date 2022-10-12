@@ -24,6 +24,12 @@ const player_wrapper = ref<HTMLDivElement | null>(null),
     pause_btn_svg = ref<any>(null);
 let is_paused = true;
 
+function hadleVisibilityChange() {
+    if (document.visibilityState === "hidden")
+        stopPrintingCurrentPlayingData();
+    else
+        printCurrentPlayingData();
+}
 
 async function redirectAuthorizedURL() {
     let [authorize_url, rand_state] = await createAuthorizedURL();
@@ -61,8 +67,13 @@ function skipToPreviousTrack() {
     skipToPreviousPlayback(JSON.parse(window.localStorage.spotify_token).access_token);
 }
 
-async function printCurrentPlayingData() {
-    let print_int = setInterval(async () => {
+function printCurrentPlayingData() {
+    if (window.spotifyPrintInterval) {
+        clearInterval(window.spotifyPrintInterval)
+        delete window.spotifyPrintInterval;
+    }
+
+    window.spotifyPrintInterval = setInterval(async () => {
         try {
             await updatePlaybackStateData();
 
@@ -73,9 +84,17 @@ async function printCurrentPlayingData() {
             setPlayPauseButton();
         } catch (error) {
             console.error(error);
-            clearInterval(print_int);
+            clearInterval(window.spotifyPrintInterval);
         }
     }, 1000);
+}
+
+function stopPrintingCurrentPlayingData() {
+    if (!window.spotifyPrintInterval) return;
+    
+    clearInterval(window.spotifyPrintInterval);
+    delete window.spotifyPrintInterval;
+
 }
 
 async function updatePlaybackStateData() {
@@ -134,12 +153,15 @@ onMounted(() => {
         checkSpotifyAuthorizationCode();
     else {
         printCurrentPlayingData();
+        document.addEventListener('visibilitychange', hadleVisibilityChange);
         login_btn.value?.classList.add('hidde');
         player_wrapper.value?.classList.remove('hidde');
     }
 });
 
 </script>
+
+
 <template>
     <div class="spotify-card">
         <img class="spotify-logo" src="../assets/spotify_icon.png" alt="Spotify logo"/>
@@ -165,6 +187,8 @@ onMounted(() => {
         </div>
     </div>
 </template>
+
+
 <style scoped>
 .hidde {
     display: none !important;
@@ -181,6 +205,7 @@ onMounted(() => {
     position: relative;
     border-radius: 5px;
     color: #000000;
+    border: 1px solid #000000;
 }
 
 .spotify-logo {
@@ -235,7 +260,7 @@ onMounted(() => {
     height: auto;
     margin-left: auto;
     margin-right: 50px;
-    border: 1px solid black;
+    box-shadow: #000000 0px 0px 5px;
     border-radius: 10px;
 }
 
