@@ -3,7 +3,7 @@
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
- function generateRandomString(length: Number) {
+function generateRandomString(length: Number) {
     var text = '';
     var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -12,6 +12,18 @@
     }
     return text;
 };
+
+async function generateCodeChallenge(codeVerifier: string) {
+    const digest = await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(codeVerifier),
+    );
+
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+}
 
 export async function getToken() {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
@@ -54,27 +66,32 @@ export async function getTrack(track_id: string, token: string) {
     return data;
 }
 
-export function createAuthorizedURL() {
+export async function createAuthorizedURL() {
     let scope = 'streaming user-read-playback-state user-modify-playback-state user-read-private user-read-email',
         redirect_uri = 'http://localhost:3000/',
-        client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+        client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
+        rand_state = generateRandomString(64),
+        hash_rand_state = await generateCodeChallenge(rand_state);
 
     let authorizeURL = 'https://accounts.spotify.com/authorize?' +
-        encodeURI('response_type=code' + '&' +
+        encodeURI(
+            'response_type=code' + '&' +
             'client_id=' + client_id + '&' +
             'scope=' + scope + '&' +
             'redirect_uri=' + redirect_uri + '&' +
-            'state=' + generateRandomString(16)
+            'code_challenge_method=S256' + '&' +
+            'code_challenge=' + hash_rand_state
         );
 
-    return authorizeURL;
+    return [authorizeURL, rand_state];
 
 }
 
 export async function requestAccessToken(code: string) {
     const client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
-        client_secret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET,
         form_data = new URLSearchParams({
+            client_id: client_id,
+            code_verifier: window.localStorage.spotify_auth_code_verifier,
             code: code,
             redirect_uri: 'http://localhost:3000/',
             grant_type: 'authorization_code'
@@ -82,7 +99,6 @@ export async function requestAccessToken(code: string) {
     const request = await fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: {
-            'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret),
             'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: form_data
@@ -93,15 +109,14 @@ export async function requestAccessToken(code: string) {
 
 async function refreshAccessToken(refresh_token: string) {
     const client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
-        client_secret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET,
         form_data = new URLSearchParams({
             grant_type: 'refresh_token',
-            refresh_token: refresh_token
+            refresh_token: refresh_token,
+            client_id: client_id
         });
     const request = await fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: {
-            'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret),
             'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: form_data
@@ -116,9 +131,9 @@ async function refreshAccessTokenHadler(refres_token: string, callback: any) {
         // CONTROL REFRESH TOKEN ERRORS
     }
 
-    let spotify_token = (window.localStorage.spotify_token) ? 
+    let spotify_token = (window.localStorage.spotify_token) ?
         JSON.parse(window.localStorage.spotify_token) : {};
-    Object.entries(refreshed_access_token).forEach( ([key, value]) => {
+    Object.entries(refreshed_access_token).forEach(([key, value]) => {
         spotify_token[key] = value;
     });
     window.localStorage.setItem('spotify_token', JSON.stringify(spotify_token));
