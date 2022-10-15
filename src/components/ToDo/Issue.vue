@@ -60,7 +60,7 @@ const color_5 = '#1E2E1E';
   padding: 5px;
   border: 0;
   box-shadow: -2px 2px 7px v-bind(color_3);
-  background-color: v-bind(color_4);
+  background-color: v-bind(color_5);
   border-radius: 5px;
   overflow: hidden;
 }
