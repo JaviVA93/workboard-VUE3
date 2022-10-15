@@ -23,7 +23,6 @@ function removeCard() {
   card.value.style.height = computed_height;
 
   let tl = gsap.timeline();
-  tl.call(() => { card.value?.classList.add('to-remove'); });
   tl.to(card.value, { width: 0, opacity: 0, duration: 0.25, ease: "power3.inOut" });
   tl.call(() => {
     if (props.id)
@@ -88,22 +87,10 @@ button {
   background-color: v-bind(color_2);
 
   padding: 5px;
-  border-radius: 5px;
+  border-radius: 3px;
   border: 0;
 }
 button:hover {
   background-color: v-bind(color_1);
-}
-
-.to-remove h1 {
-  opacity: 0;
-}
-
-.to-remove span {
-  opacity: 0;
-}
-
-.to-remove button {
-  opacity: 0;
 }
 </style>

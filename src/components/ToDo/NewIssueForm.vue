@@ -90,7 +90,7 @@ const color_5 = '#1E2E1E';
   font-size: 1.2rem;
   font-weight: 700;
 
-  border-radius: 5px;
+  border-radius: 3px;
   border: 0;
   padding: 5px;
   width: 100px;

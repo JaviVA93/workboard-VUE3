@@ -13,9 +13,7 @@ import ToDo from "./components/ToDo/ToDo.vue";
   <div class="pomodoro-container">
     <Pomodoro />
   </div>
-  <div class="todo-wrapper">
-    <ToDo />
-  </div>
+  <ToDo />
 </template>
 
 <style>
@@ -57,20 +55,5 @@ body {
   grid-template-columns: repeat(auto-fit, 25rem);
   gap: 1rem;
   justify-content: center;
-}
-
-.todo-wrapper {
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 98%;
-
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-
-  background-color: rgba(0, 0, 0, 0.15);
-  border-radius: 5px;
-  padding: 10px; 
 }
 </style>
