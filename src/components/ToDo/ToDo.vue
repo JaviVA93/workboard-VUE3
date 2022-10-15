@@ -7,8 +7,7 @@ import NewIssueForm from './NewIssueForm.vue';
 interface CardInterface {
   id: string,
   title: string,
-  text: string,
-  url: string
+  text: string
 }
 
 const issues = ref<CardInterface[]>();
@@ -22,13 +21,12 @@ onMounted(() => {
     issues.value = [];
 });
 
-function createCard(title: string, text: string, url: string) {
+function createCard(title: string, text: string) {
   issues.value = issues.value || [];
   issues.value.push({
     id: Math.floor(Math.random() * 100000).toString(),
     title: title,
-    text: text,
-    url: url
+    text: text
   });
   window.localStorage.setItem('cards_data', JSON.stringify(issues.value));
 }
