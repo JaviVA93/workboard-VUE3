@@ -86,7 +86,7 @@ function printCurrentPlayingData() {
             console.error(error);
             clearInterval(window.spotifyPrintInterval);
         }
-    }, 1000);
+    }, 5000);
 }
 
 function stopPrintingCurrentPlayingData() {
