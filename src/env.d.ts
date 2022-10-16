@@ -12,5 +12,6 @@ interface Window {
   spotify_player: any;
   onSpotifyWebPlaybackSDKReady: () => void;
   spotifyData: any;
-  spotifyPrintInterval: any;
+  spotifyDataPrinter: any;
+  spotifyDataPrinterFlag: boolean;
 }

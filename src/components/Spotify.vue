@@ -26,9 +26,9 @@ let is_paused = true;
 
 function hadleVisibilityChange() {
     if (document.visibilityState === "hidden")
-        stopPrintingCurrentPlayingData();
+        stopPrintingCurrentPlayingDataLoop();
     else
-        printCurrentPlayingData();
+        startPrintCurrentPlayingDataLoop();
 }
 
 async function redirectAuthorizedURL() {
@@ -51,50 +51,59 @@ async function checkSpotifyAuthorizationCode() {
         window.localStorage.setItem('spotify_token', JSON.stringify(req_at));
         login_btn.value?.classList.add('hidde');
         player_wrapper.value?.classList.remove('hidde');
-        printCurrentPlayingData();
+        startPrintCurrentPlayingDataLoop();
     }
 }
 
-function playPauseTrack() {
-    playPausePlayback(JSON.parse(window.localStorage.spotify_token).access_token);
+async function playPauseTrack() {
+    await playPausePlayback(JSON.parse(window.localStorage.spotify_token).access_token);
+    setTimeout(printCurrentPlayingData, 1000);
 }
 
-function skipToNextTrack() {
-    skipToNextPlayback(JSON.parse(window.localStorage.spotify_token).access_token);
+async function skipToNextTrack() {
+    await skipToNextPlayback(JSON.parse(window.localStorage.spotify_token).access_token);
+    setTimeout(printCurrentPlayingData, 1000);
 }
 
-function skipToPreviousTrack() {
-    skipToPreviousPlayback(JSON.parse(window.localStorage.spotify_token).access_token);
+async function skipToPreviousTrack() {
+    await skipToPreviousPlayback(JSON.parse(window.localStorage.spotify_token).access_token);
+    setTimeout(printCurrentPlayingData, 1000);
 }
 
-function printCurrentPlayingData() {
-    if (window.spotifyPrintInterval) {
-        clearInterval(window.spotifyPrintInterval)
-        delete window.spotifyPrintInterval;
-    }
+async function printCurrentPlayingData() {
+    await updatePlaybackStateData();
 
-    window.spotifyPrintInterval = setInterval(async () => {
+    printCurrentTrack();
+    printCurrentArtist();
+    printCurrentTrackImg();
+
+    setPlayPauseButton();
+}
+
+function startPrintCurrentPlayingDataLoop() {
+    window.spotifyData = window.spotifyData || {};
+    
+    if (window.spotifyData.dataPrinterLoop)
+        delete window.spotifyData.dataPrinterLoop;
+
+    window.spotifyData.printerLoopFlag = false;
+
+    window.spotifyData.dataPrinterLoop = async () => {
         try {
-            await updatePlaybackStateData();
+            await printCurrentPlayingData();
 
-            printCurrentTrack();
-            printCurrentArtist();
-            printCurrentTrackImg();
-
-            setPlayPauseButton();
+            if (window.spotifyData.printerLoopFlag !== true)
+                setTimeout(window.spotifyData.dataPrinterLoop, 5000);
         } catch (error) {
             console.error(error);
-            clearInterval(window.spotifyPrintInterval);
         }
-    }, 5000);
+    };
+    window.spotifyData.dataPrinterLoop();
 }
 
-function stopPrintingCurrentPlayingData() {
-    if (!window.spotifyPrintInterval) return;
-    
-    clearInterval(window.spotifyPrintInterval);
-    delete window.spotifyPrintInterval;
-
+function stopPrintingCurrentPlayingDataLoop() {
+    if (window.spotifyData)
+        window.spotifyData.printerLoopFlag = true;
 }
 
 async function updatePlaybackStateData() {
@@ -152,7 +161,7 @@ onMounted(() => {
     if (!window.localStorage.spotify_token)
         checkSpotifyAuthorizationCode();
     else {
-        printCurrentPlayingData();
+        startPrintCurrentPlayingDataLoop();
         document.addEventListener('visibilitychange', hadleVisibilityChange);
         login_btn.value?.classList.add('hidde');
         player_wrapper.value?.classList.remove('hidde');
