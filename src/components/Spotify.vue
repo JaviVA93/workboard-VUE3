@@ -14,6 +14,7 @@ import VinilImg from '../assets/vinilo.png';
 
 const player_wrapper = ref<HTMLDivElement | null>(null),
     login_btn = ref<HTMLButtonElement | null>(null),
+    error_msg = ref<HTMLSpanElement | null>(null),
     player_song_name = ref<HTMLElement | null>(null),
     player_artis = ref<HTMLElement | null>(null),
     player_track_img = ref<HTMLImageElement | null>(null),
@@ -49,8 +50,8 @@ async function checkSpotifyAuthorizationCode() {
             return;
         }
         window.localStorage.setItem('spotify_token', JSON.stringify(req_at));
-        login_btn.value?.classList.add('hidde');
-        player_wrapper.value?.classList.remove('hidde');
+        login_btn.value?.classList.add('hidden');
+        player_wrapper.value?.classList.remove('hidden');
         startPrintCurrentPlayingDataLoop();
     }
 }
@@ -72,11 +73,10 @@ async function skipToPreviousTrack() {
 
 async function printCurrentPlayingData() {
     await updatePlaybackStateData();
-
     printCurrentTrack();
     printCurrentArtist();
     printCurrentTrackImg();
-
+    printErrorMessage();
     setPlayPauseButton();
 }
 
@@ -144,16 +144,29 @@ function printCurrentTrackImg() {
         player_track_img.value?.setAttribute('src', VinilImg);
 }
 
+function printErrorMessage() {
+    if (!window.spotifyData || !window.spotifyData.playbackState || !error_msg.value) return;
+
+    if (window.spotifyData.playbackState.error) {
+        error_msg.value.innerText = window.spotifyData.playbackState.error.message;
+        error_msg.value.classList.remove('hidden');
+    }
+    else {
+        error_msg.value.innerText = '';
+        error_msg.value.classList.add('hidden');
+    }
+}
+
 function setPlayPauseButton() {
     if (!window.spotifyData || !window.spotifyData.playbackState) return;
 
     if (window.spotifyData.playbackState.is_playing === false) {
-        pause_btn_svg.value?.$el.classList.add('hidde');
-        play_btn_svg.value?.$el.classList.remove('hidde');
+        pause_btn_svg.value?.$el.classList.add('hidden');
+        play_btn_svg.value?.$el.classList.remove('hidden');
     }
     else {
-        play_btn_svg.value?.$el.classList.add('hidde');
-        pause_btn_svg.value?.$el.classList.remove('hidde');
+        play_btn_svg.value?.$el.classList.add('hidden');
+        pause_btn_svg.value?.$el.classList.remove('hidden');
     }
 }
 
@@ -163,8 +176,8 @@ onMounted(() => {
     else {
         startPrintCurrentPlayingDataLoop();
         document.addEventListener('visibilitychange', hadleVisibilityChange);
-        login_btn.value?.classList.add('hidde');
-        player_wrapper.value?.classList.remove('hidde');
+        login_btn.value?.classList.add('hidden');
+        player_wrapper.value?.classList.remove('hidden');
     }
 });
 
@@ -173,9 +186,12 @@ onMounted(() => {
 
 <template>
     <div class="spotify-card">
-        <img class="spotify-logo" src="../assets/spotify_icon.png" alt="Spotify logo"/>
+        <div class="top-left">
+            <img class="spotify-logo" src="../assets/spotify_icon.png" alt="Spotify logo"/>
+            <span class="error-msg hidden" ref="error_msg">Playback not available or active</span>
+        </div>
         <button class="spotify-login-btn" @click="redirectAuthorizedURL" ref="login_btn">Log in</button>
-        <div class="player hidde" ref="player_wrapper">
+        <div class="player hidden" ref="player_wrapper">
             <div class="player_left">
                 <h2 class="player-song-name" ref="player_song_name"></h2>
                 <span class="player-artist-name" ref="player_artis"></span>
@@ -185,7 +201,7 @@ onMounted(() => {
                     </button>
                     <button class="play-btn" ref="play_btn" @click="playPauseTrack">
                         <SvgPlayButton ref="play_btn_svg" />
-                        <SvgPauseButton class="hidde" ref="pause_btn_svg" />
+                        <SvgPauseButton class="hidden" ref="pause_btn_svg" />
                     </button>
                     <button ref="next_btn" @click="skipToNextTrack">
                         <SvgNextButton />
@@ -199,7 +215,7 @@ onMounted(() => {
 
 
 <style scoped>
-.hidde {
+.hidden {
     display: none !important;
 }
 
@@ -217,11 +233,22 @@ onMounted(() => {
     border: 1px solid #000000;
 }
 
-.spotify-logo {
-    width: 30px;
+.top-left {
     position: absolute;
     top: 5px;
     left: 5px;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.spotify-logo {
+    width: 30px;
+}
+
+.error-msg {
+    
 }
 
 .spotify-login-btn {

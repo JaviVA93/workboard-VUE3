@@ -57,7 +57,7 @@ const color_5 = '#1E2E1E';
     <div class="horizontal-line"></div>
     <div class="issues-container">
       <div v-for="card in issues" :key="card.id">
-        <Issue @remove-card="removeCard" :id="card.id" :title="card.title" :text="card.text" :url="card.url" />
+        <Issue @remove-card="removeCard" :id="card.id" :title="card.title" :text="card.text" />
       </div>
     </div>
     <div class="issue-form-container">
@@ -74,7 +74,7 @@ const color_5 = '#1E2E1E';
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  width: 98%;
+  width: 100%;
 
   display: flex;
   flex-direction: column;
