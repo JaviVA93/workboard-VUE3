@@ -7,13 +7,13 @@ import ToDo from "./components/ToDo/ToDo.vue";
 </script>
 
 <template>
-  <div class="spotify-container">
-    <Spotify />
+  <div class="content">
+    <div class="firt-row-components">
+      <Spotify />
+      <Pomodoro />
+    </div>
+    <ToDo />
   </div>
-  <div class="pomodoro-container">
-    <Pomodoro />
-  </div>
-  <ToDo />
 </template>
 
 <style>
@@ -43,22 +43,13 @@ body {
   background-color: #1a1a1a;
 }
 
-.spotify-container {
-  width: fit-content;
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 15px 0;
+.firt-row-components {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
 }
 
-.pomodoro-container {
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 15px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, 25rem);
-  gap: 1rem;
-  justify-content: center;
+.content {
+  margin: 10px;
 }
 </style>
