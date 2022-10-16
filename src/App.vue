@@ -30,12 +30,17 @@ body {
 }
 
 #app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-height: 100vh;
+  width: 100%;
   font-family: 'Dosis', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 20px;
+  background-color: #1a1a1a;
 }
 
 .spotify-container {
@@ -43,7 +48,7 @@ body {
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 15px;
+  margin: 15px 0;
 }
 
 .pomodoro-container {
