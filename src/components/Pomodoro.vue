@@ -6,7 +6,12 @@ import pauseSvg from '../assets/pause-button-icon.svg';
 import stopSvg from '../assets/stop-button-round-icon.svg';
 import clockAlarm from '../assets/clock-alarm.mp3';
 
-let pomo_vars = {
+interface PomoTimeInterface {
+    seconds: number,
+    minutes: number
+}
+
+const pomo_vars = {
     status: '',
     interval: {
         minutes: 25,
@@ -15,7 +20,12 @@ let pomo_vars = {
     timeRemain: {
         seconds: 0,
         minutes: 0,
+        totalInMiliseconds: 0,
     },
+    timeElapsed: {
+        miliseconds: 0,
+    },
+    lastUpdateTimestamp: 0,
 }
 
 const pomoTime = ref<HTMLElement | null>(null);
@@ -35,17 +45,23 @@ function startPauseResumePomodoro() {
     if (pomo_vars.status === 'running') {
         pomo_vars.status = 'pause';
         setPlayPauseButtonBackground('play');
-        if (pomoInterval) clearInterval(pomoInterval);
+        if (pomoInterval) 
+            clearInterval(pomoInterval);
     }
     else {
-        if (pomo_vars.status === '' || pomo_vars.status === 'end')
+        if (pomo_vars.status !== 'pause') {
             pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
+            pomo_vars.timeRemain.totalInMiliseconds = 
+                convertTimeToMS(pomo_vars.timeRemain.minutes, pomo_vars.timeRemain.seconds);
+            pomo_vars.timeElapsed.miliseconds = 0;
+        }
+        pomo_vars.lastUpdateTimestamp = new Date().getTime();
 
         pomo_vars.status = 'running';
 
         setPlayPauseButtonBackground('pause');
 
-        pomoInterval = setInterval(updatePomodoro, 1000);
+        pomoInterval = setInterval(updatePomodoro, 250);
     }
 }
 
@@ -60,13 +76,43 @@ function stopPomodoro() {
     setPlayPauseButtonBackground('play');
 }
 
-function calculateTimeRemain() {
-    if (pomo_vars.timeRemain.seconds <= 0 && pomo_vars.timeRemain.minutes >= 0) {
-        pomo_vars.timeRemain.minutes--;
-        pomo_vars.timeRemain.seconds = 59;
+function convertMsToTime(miliseconds: number): PomoTimeInterface {
+    if (miliseconds <= 0)
+        return {
+            seconds: 0,
+            minutes: 0
+        }
+    
+    let mins = Math.floor(miliseconds / 60000)
+    let secs = Math.floor((miliseconds % 60000) / 1000);
+
+    return (secs === 60) ? {
+        seconds: 0,
+        minutes: mins + 1
+    } : {
+        seconds: secs,
+        minutes: mins
     }
-    else
-        pomo_vars.timeRemain.seconds--;
+}
+
+function convertTimeToMS(minutes: number, seconds: number): number {
+    return (minutes * 60000) + (seconds * 1000);
+}
+
+function calculateTimeRemain() {
+    let elapsedTimeSinceLastUpdate = new Date().getTime() - pomo_vars.lastUpdateTimestamp;
+    let elapsedTimeUpdatedMs = 
+        elapsedTimeSinceLastUpdate + pomo_vars.timeElapsed.miliseconds;
+    
+    pomo_vars.timeElapsed.miliseconds = elapsedTimeUpdatedMs;
+
+    let timeRemainMs = pomo_vars.timeRemain.totalInMiliseconds - elapsedTimeUpdatedMs;
+    let timeRemain = convertMsToTime(timeRemainMs);
+
+    pomo_vars.timeRemain.minutes = timeRemain.minutes;
+    pomo_vars.timeRemain.seconds = timeRemain.seconds;
+
+    pomo_vars.lastUpdateTimestamp = new Date().getTime();
 }
 
 function printTime() {
@@ -105,11 +151,15 @@ function updatePomodoro() {
     printTime();
 
     if (pomo_vars.timeRemain.seconds <= 0 && pomo_vars.timeRemain.minutes <= 0) {
+        pomo_vars.timeRemain.seconds = 0;
+        pomo_vars.timeRemain.minutes = 0;
         pomo_vars.status = 'end';
+
         pomoAlarm.play();
         pomoEndNotification();
         setPlayPauseButtonBackground('play');
-        if (pomoInterval) clearInterval(pomoInterval);
+        if (pomoInterval) 
+            clearInterval(pomoInterval);
     }
     else if (pomo_vars.status === 'pause')
         setPlayPauseButtonBackground('play');
