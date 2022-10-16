@@ -85,7 +85,8 @@ const color_5 = '#1E2E1E';
 }
 
 .todo-wrapper-title {
-  color: v-bind(color_5)
+  align-self: flex-start;
+  color: v-bind(color_5);
 }
 
 .horizontal-line {
