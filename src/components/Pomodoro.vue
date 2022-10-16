@@ -105,7 +105,6 @@ function calculateTimeRemain() {
         elapsedTimeSinceLastUpdate + pomo_vars.timeElapsed.miliseconds;
     
     pomo_vars.timeElapsed.miliseconds = elapsedTimeUpdatedMs;
-    console.log(elapsedTimeUpdatedMs);
 
     let timeRemainMs = pomo_vars.timeRemain.totalInMiliseconds - elapsedTimeUpdatedMs;
     let timeRemain = convertMsToTime(timeRemainMs);
