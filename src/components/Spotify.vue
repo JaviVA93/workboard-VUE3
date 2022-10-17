@@ -9,11 +9,13 @@ import SvgPlayButton from './assets/SvgPlayButton.vue';
 import SvgPauseButton from './assets/SvgPauseButton.vue';
 import SvgBackButton from './assets/SvgBackButton.vue';
 import SvgNextButton from './assets/SvgNextButton.vue';
+import SvgOffButton from './assets/SvgOffButton.vue';
 import VinilImg from '../assets/vinilo.png';
 
 
 const player_wrapper = ref<HTMLDivElement | null>(null),
     login_btn = ref<HTMLButtonElement | null>(null),
+    logout_btn = ref<HTMLButtonElement | null>(null),
     error_msg = ref<HTMLSpanElement | null>(null),
     player_song_name = ref<HTMLElement | null>(null),
     player_artis = ref<HTMLElement | null>(null),
@@ -25,7 +27,7 @@ const player_wrapper = ref<HTMLDivElement | null>(null),
     pause_btn_svg = ref<any>(null);
 let is_paused = true;
 
-function hadleVisibilityChange() {
+function handleVisibilityChange() {
     if (document.visibilityState === "hidden")
         stopPrintingCurrentPlayingDataLoop();
     else
@@ -51,9 +53,20 @@ async function checkSpotifyAuthorizationCode() {
         }
         window.localStorage.setItem('spotify_token', JSON.stringify(req_at));
         login_btn.value?.classList.add('hidden');
+        logout_btn.value?.classList.remove('hidden');
         player_wrapper.value?.classList.remove('hidden');
         startPrintCurrentPlayingDataLoop();
     }
+}
+
+function logout() {
+    window.localStorage.removeItem('spotify_token');
+
+    stopPrintingCurrentPlayingDataLoop();
+
+    login_btn.value?.classList.remove('hidden');
+    logout_btn.value?.classList.add('hidden');
+    player_wrapper.value?.classList.add('hidden');
 }
 
 async function playPauseTrack() {
@@ -82,7 +95,7 @@ async function printCurrentPlayingData() {
 
 function startPrintCurrentPlayingDataLoop() {
     window.spotifyData = window.spotifyData || {};
-    
+
     if (window.spotifyData.dataPrinterLoop)
         delete window.spotifyData.dataPrinterLoop;
 
@@ -107,6 +120,8 @@ function stopPrintingCurrentPlayingDataLoop() {
 }
 
 async function updatePlaybackStateData() {
+    if (!window.localStorage.spotify_token) return;
+
     let token = JSON.parse(window.localStorage.spotify_token).access_token;
     let playback_state_data = await getPlaybackState(token);
     window.spotifyData = window.spotifyData || {};
@@ -175,8 +190,9 @@ onMounted(() => {
         checkSpotifyAuthorizationCode();
     else {
         startPrintCurrentPlayingDataLoop();
-        document.addEventListener('visibilitychange', hadleVisibilityChange);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
         login_btn.value?.classList.add('hidden');
+        logout_btn.value?.classList.remove('hidden');
         player_wrapper.value?.classList.remove('hidden');
     }
 });
@@ -186,9 +202,12 @@ onMounted(() => {
 
 <template>
     <div class="spotify-card">
-        <div class="top-left">
-            <img class="spotify-logo" src="../assets/spotify_icon.png" alt="Spotify logo"/>
+        <div class="top">
+            <img class="spotify-logo" src="../assets/spotify_icon.png" alt="Spotify logo" />
             <span class="error-msg hidden" ref="error_msg">Playback not available or active</span>
+            <button class="spotify-logout-btn" @click="logout" ref="logout_btn">
+                <SvgOffButton />
+            </button>
         </div>
         <button class="spotify-login-btn" @click="redirectAuthorizedURL" ref="login_btn">Log in</button>
         <div class="player hidden" ref="player_wrapper">
@@ -220,39 +239,42 @@ onMounted(() => {
 }
 
 .spotify-card {
-    font-family: 'Dosis', sans-serif !important;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    font-family: 'Dosis', sans-serif !important;
     background-color: rgb(121, 118, 118);
-    width: 500px;
+    width: 450px;
     min-height: 200px;
     position: relative;
     border-radius: 5px;
     color: #000000;
     border: 1px solid #000000;
+    padding: 5px;
 }
 
-.top-left {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-
+.top {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+.bottom {
+    display: flex;
+    align-items: flex-start;
+    margin-top: auto;
 }
 
 .spotify-logo {
     width: 30px;
 }
 
-.error-msg {
-    
-}
-
 .spotify-login-btn {
     all: unset;
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 
     background-color: #181818;
     color: white;
@@ -272,11 +294,25 @@ onMounted(() => {
     outline-offset: 1px;
 }
 
+.spotify-logout-btn {
+    all: unset;
+    margin-left: auto;
+    width: 30px;
+}
+
+.spotify-logout-btn:focus svg{
+    fill: #3d3d3d;
+}
+
 .player {
     display: flex;
     align-items: center;
-    margin-left: 40px;
-    width: 100%;
+    gap: 40px;
+    width: fit-content;
+
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .player_left {
@@ -295,8 +331,6 @@ onMounted(() => {
 .player-track-img {
     width: 150px;
     height: auto;
-    margin-left: auto;
-    margin-right: 50px;
     box-shadow: #000000 0px 0px 5px;
     border-radius: 10px;
 }

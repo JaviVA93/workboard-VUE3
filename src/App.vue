@@ -19,6 +19,12 @@ import ToDo from "./components/ToDo/ToDo.vue";
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Dosis&display=swap');
 
+@media screen and (max-width: 800px) {
+  .firt-row-components {
+    flex-direction: column;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -47,6 +53,7 @@ body {
   display: flex;
   justify-content: space-between;
   margin-bottom: 15px;
+  gap: 15px;
 }
 
 .content {
