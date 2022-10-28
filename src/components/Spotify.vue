@@ -24,8 +24,14 @@ const player_wrapper = ref<HTMLDivElement | null>(null),
     play_btn = ref<HTMLButtonElement | null>(null),
     prev_btn = ref<HTMLButtonElement | null>(null),
     play_btn_svg = ref<any>(null),
-    pause_btn_svg = ref<any>(null);
-let is_paused = true;
+    pause_btn_svg = ref<any>(null),
+    playPauseRequests = {
+        requestPending: false,
+        lastRequestTimestamp: 0,
+        minElapsedTimeAllowed: 1000,
+    };
+    
+
 
 function handleVisibilityChange() {
     if (document.visibilityState === "hidden")
@@ -70,8 +76,17 @@ function logout() {
 }
 
 async function playPauseTrack() {
-    await playPausePlayback(JSON.parse(window.localStorage.spotify_token).access_token);
-    setTimeout(printCurrentPlayingData, 1000);
+    const current_timestamp = new Date().getTime();
+    const elapsed_time_last_request = current_timestamp - playPauseRequests.lastRequestTimestamp;
+    if (!playPauseRequests.requestPending && elapsed_time_last_request > playPauseRequests.minElapsedTimeAllowed) {
+        console.dir(playPauseRequests);
+        console.dir(elapsed_time_last_request);
+        playPauseRequests.requestPending = true;
+        playPauseRequests.lastRequestTimestamp = new Date().getTime();
+        await playPausePlayback(JSON.parse(window.localStorage.spotify_token).access_token);
+        playPauseRequests.requestPending = false;
+        setTimeout(printCurrentPlayingData, 1000);
+    }
 }
 
 async function skipToNextTrack() {
