@@ -225,6 +225,12 @@ export async function playPausePlayback(token: string) {
             return true;
         else {
             const body = await request.json();
+            
+            if (body.error && body.error.status === 403 && 
+                body.error.message === 'Player command failed: Restriction violated')
+                return false;
+                // Do nothing, controlated error (can't be handled). Same request multiple times, f.e: request "play"
+                // when the playback is already playing something
             console.error('playPausePlayback api request error: ' + request.status);
             console.error(body);
             return false;
