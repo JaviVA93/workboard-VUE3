@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { gsap } from 'gsap';
 import {
     createAuthorizedURL, requestAccessToken, playPausePlayback, skipToNextPlayback, skipToPreviousPlayback,
     getCurrentPlayingTrack, getPlaybackState
@@ -20,6 +21,7 @@ const player_wrapper = ref<HTMLDivElement | null>(null),
     player_song_name = ref<HTMLElement | null>(null),
     player_artis = ref<HTMLElement | null>(null),
     player_track_img = ref<HTMLImageElement | null>(null),
+    player_img_wrapper = ref<HTMLDivElement | null>(null),
     next_btn = ref<HTMLButtonElement | null>(null),
     play_btn = ref<HTMLButtonElement | null>(null),
     prev_btn = ref<HTMLButtonElement | null>(null),
@@ -30,7 +32,7 @@ const player_wrapper = ref<HTMLDivElement | null>(null),
         lastRequestTimestamp: 0,
         minElapsedTimeAllowed: 1000,
     };
-    
+
 
 
 function handleVisibilityChange() {
@@ -147,8 +149,14 @@ function printCurrentTrack() {
     if (!window.spotifyData || !window.spotifyData.playbackState) return;
 
     let track_name = (window.spotifyData.playbackState.error) ? 'N/A' : window.spotifyData.playbackState.item.name
-    if (player_song_name.value)
-        player_song_name.value.innerText = track_name;
+    if (player_song_name.value && player_song_name.value.innerText !== track_name) {
+        const tl = gsap.timeline();
+        tl.to(player_song_name.value, { opacity: 0, duration: 0, ease: "power3.inOut" });
+        tl.call(() => {
+            if (player_song_name.value) player_song_name.value.innerText = track_name
+        }, undefined, '>');
+        tl.to(player_song_name.value, { opacity: 1, duration: 0.5, ease: "power3.inOut" }, '<');
+    }
 }
 
 function printCurrentArtist() {
@@ -161,15 +169,38 @@ function printCurrentArtist() {
         window.spotifyData.playbackState.item.artists.forEach((a: any, i: number) => {
             artists = (i === 0) ? a.name : `${artists}, ${a.name}`;
         });
-    if (player_artis.value)
-        player_artis.value.innerText = artists;
+
+    if (player_artis.value && player_artis.value.innerText !== artists) {
+        const tl = gsap.timeline();
+        tl.to(player_artis.value, { opacity: 0, duration: 0, ease: "power3.inOut"});
+        tl.call(() => {
+            if (player_artis.value) player_artis.value.innerText = artists
+        }, undefined, '>');
+        tl.to(player_artis.value, { opacity: 1, duration: 0.5, ease: "power3.inOut" }, '<');
+    }
 }
 
 function printCurrentTrackImg() {
     if (!window.spotifyData || !window.spotifyData.playbackState) return;
 
-    if (!window.spotifyData.playbackState.error)
-        player_track_img.value?.setAttribute('src', window.spotifyData.playbackState.item.album.images[1].url);
+    if (!window.spotifyData.playbackState.error) {
+        const current_img = player_img_wrapper.value?.querySelector('img');
+        if (!current_img) return;
+        if (current_img.src === window.spotifyData.playbackState.item.album.images[1].url) return;
+
+        const new_img = Object.assign(document.createElement('img'), {
+            className: 'player-track-img',
+            src: window.spotifyData.playbackState.item.album.images[1].url,
+            style: 'opacity: 0;',
+            alt: 'Current track',
+        });
+        player_img_wrapper.value?.prepend(new_img);
+
+        const tl = gsap.timeline();
+        tl.to(current_img, { opacity: 0, duration: 0.5, ease: "power3.inOut" });
+        tl.to(new_img, { opacity: 1, duration: 0.5, ease: "power3.inOut" }, '<');
+        tl.call(() => { current_img.remove(); }, undefined, '>');
+    }
     else if (player_track_img.value?.getAttribute('src') !== VinilImg)
         player_track_img.value?.setAttribute('src', VinilImg);
 }
@@ -220,35 +251,39 @@ onMounted(() => {
         <div class="top">
             <img class="spotify-logo" src="../assets/spotify_icon.png" alt="Spotify logo" />
             <span class="error-msg hidden" ref="error_msg">Playback not available or active</span>
-            <button class="spotify-logout-btn" @click="logout" ref="logout_btn">
+            <button class="spotify-logout-btn" @click="logout" ref="logout_btn" aria-label="Logout">
                 <SvgOffButton />
             </button>
         </div>
-        <button class="spotify-login-btn" @click="redirectAuthorizedURL" ref="login_btn">Log in</button>
+        <button class="spotify-login-btn" @click="redirectAuthorizedURL" ref="login_btn" aria-label="Login">
+            Log in
+        </button>
         <div class="player hidden" ref="player_wrapper">
             <div class="player_left">
                 <h2 class="player-song-name" ref="player_song_name"></h2>
                 <span class="player-artist-name" ref="player_artis"></span>
                 <div class="player-buttons" ref="player_buttons">
-                    <button ref="prev_btn" @click="skipToPreviousTrack">
+                    <button ref="prev_btn" @click="skipToPreviousTrack" aria-label="Previous song">
                         <SvgBackButton />
                     </button>
-                    <button class="play-btn" ref="play_btn" @click="playPauseTrack">
+                    <button class="play-btn" ref="play_btn" @click="playPauseTrack" aria-label="Play pause song">
                         <SvgPlayButton ref="play_btn_svg" />
                         <SvgPauseButton class="hidden" ref="pause_btn_svg" />
                     </button>
-                    <button ref="next_btn" @click="skipToNextTrack">
+                    <button ref="next_btn" @click="skipToNextTrack" aria-label="Next song">
                         <SvgNextButton />
                     </button>
                 </div>
             </div>
-            <img src="../assets/vinilo.png" ref="player_track_img" class="player-track-img" />
+            <div ref="player_img_wrapper" class="player-img-wrapper">
+                <img src="../assets/vinilo.png" ref="player_track_img" class="player-track-img" alt="Current track"/>
+            </div>
         </div>
     </div>
 </template>
 
 
-<style scoped>
+<style>
 .hidden {
     display: none !important;
 }
@@ -315,7 +350,7 @@ onMounted(() => {
     width: 30px;
 }
 
-.spotify-logout-btn:focus svg{
+.spotify-logout-btn:focus svg {
     fill: #3d3d3d;
 }
 
@@ -343,9 +378,18 @@ onMounted(() => {
     font-weight: 700;
 }
 
-.player-track-img {
+.player-img-wrapper {
     width: 150px;
-    height: auto;
+    height: 150px;
+    position: relative;
+}
+
+.player-track-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 150px;
+    height: 150px;
     box-shadow: #000000 0px 0px 5px;
     border-radius: 10px;
 }
