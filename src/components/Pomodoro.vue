@@ -204,8 +204,8 @@ onMounted(() => {
         <h1>POMODORO</h1>
         <span class="pomo-time" ref="pomoTime"></span>
         <div class="pom-btns-wrapper">
-            <button id="pomo-start" ref="pomoStart" @click="startPauseResumePomodoro"></button>
-            <button id="pomo-stop" ref="pomoStop" @click="stopPomodoro"></button>
+            <button id="pomo-start" ref="pomoStart" @click="startPauseResumePomodoro" aria-label="Start pomodoro"></button>
+            <button id="pomo-stop" ref="pomoStop" @click="stopPomodoro" aria-label="Stop pomodoro"></button>
         </div>
     </div>
 </template>
