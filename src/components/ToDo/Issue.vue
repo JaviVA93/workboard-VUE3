@@ -54,7 +54,7 @@ const color_5 = '#1E2E1E';
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 5px;
+  gap: 10px;
   width: 20rem;
   padding: 5px;
   border: 0;
@@ -72,7 +72,8 @@ h1 {
 
 span {
   color: v-bind(color_1);
-  font-size: 1.2rem;
+  font-size: 1rem;
+  text-align: left;
 }
 
 button {
