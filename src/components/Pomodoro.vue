@@ -143,6 +143,10 @@ function startPauseResumePomodoro(vars: pomoTimer, startBtnElem: HTMLElement) {
     return vars;
 }
 
+function stopPomodoroBreak() {
+    // TO-DO
+}
+
 function stopPomodoro() {
     pomo_vars.status = 'stop';
     pomoAlarm.pause();
