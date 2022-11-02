@@ -29,6 +29,7 @@ interface pomoTimer {
         miliseconds: number,
     },
     lastUpdateTimestamp: number,
+    intervalFunction: number | undefined,
 }
 
 let pomo_vars = {
@@ -46,6 +47,7 @@ let pomo_vars = {
         miliseconds: 0,
     },
     lastUpdateTimestamp: 0,
+    intervalFunction: undefined,
 };
 let pomo_break_vars = {
     status: '',
@@ -62,6 +64,7 @@ let pomo_break_vars = {
         miliseconds: 0,
     },
     lastUpdateTimestamp: 0,
+    intervalFunction: undefined,
 };
 
 const pomoTime = ref<HTMLElement | null>(null),
@@ -69,93 +72,64 @@ const pomoTime = ref<HTMLElement | null>(null),
     pomoStop = ref<HTMLElement | null>(null),
     pomoBreakTime = ref<HTMLElement | null>(null),
     pomoBreakStart = ref<HTMLElement | null>(null),
-    pomoBreakStop = ref<HTMLElement | null>(null);
+    pomoBreakStop = ref<HTMLElement | null>(null),
+    pomoAlarm = new Audio(clockAlarm);
 
-// const cssVars = ref({
-//     // playPauseBackground: `url("${playSvg}")`,
-//     stopBackground: `url("${stopSvg}")`,
-// });
-
-let pomoInterval: any = undefined;
-
-const pomoAlarm = new Audio(clockAlarm);
-
-// function startPauseResumePomodoro() {
-//     if (!pomoStart.value) return
-//     if (pomo_vars.status === 'running') {
-//         pomo_vars.status = 'pause';
-//         setPlayPauseButton(pomoStart.value, 'play');
-//         if (pomoInterval)
-//             clearInterval(pomoInterval);
-//     }
-//     else {
-//         if (pomo_vars.status !== 'pause') {
-//             pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
-//             pomo_vars.timeRemain.totalInMiliseconds =
-//                 convertTimeToMS(pomo_vars.timeRemain.minutes, pomo_vars.timeRemain.seconds);
-//             pomo_vars.timeElapsed.miliseconds = 0;
-//         }
-//         pomo_vars.lastUpdateTimestamp = new Date().getTime();
-
-//         pomo_vars.status = 'running';
-
-//         setPlayPauseButton(pomoStart.value, 'pause');
-
-//         pomoInterval = setInterval(updatePomodoro, 250);
-//     }
-// }
 
 function startPauseMainPomo() {
-    if (!pomoStart.value) return;
-    pomo_vars = startPauseResumePomodoro(pomo_vars, pomoStart.value);
+    if (!pomoStart.value || !pomoTime.value) return;
+    startPauseResumePomodoro(pomo_vars, pomoStart.value, pomoTime.value);
 }
 
 function startPauseBreakPomo() {
-    if (!pomoBreakStart.value) return;
-    pomo_break_vars = startPauseResumePomodoro(pomo_break_vars, pomoBreakStart.value);
+    if (!pomoBreakStart.value || !pomoBreakTime.value) return;
+    startPauseResumePomodoro(pomo_break_vars, pomoBreakStart.value, pomoBreakTime.value);
 }
 
-function startPauseResumePomodoro(vars: pomoTimer, startBtnElem: HTMLElement) {
+function startPauseResumePomodoro(vars: pomoTimer, playPauseButton: HTMLElement, timeElement: HTMLElement) {
     if (vars.status === 'running') {
         vars.status = 'pause';
-        setPlayPauseButton(startBtnElem, 'play');
-        if (pomoInterval)
-            clearInterval(pomoInterval);
+        setPlayPauseButton(playPauseButton, 'play');
+        if (vars.intervalFunction)
+            clearInterval(vars.intervalFunction);
     }
     else {
         if (vars.status !== 'pause') {
             vars.timeRemain = JSON.parse(JSON.stringify(vars.interval));
             vars.timeRemain.totalInMiliseconds =
                 convertTimeToMS(vars.timeRemain.minutes, vars.timeRemain.seconds);
-                vars.timeElapsed.miliseconds = 0;
+            vars.timeElapsed.miliseconds = 0;
         }
         vars.lastUpdateTimestamp = new Date().getTime();
 
         vars.status = 'running';
 
-        setPlayPauseButton(startBtnElem, 'pause');
+        setPlayPauseButton(playPauseButton, 'pause');
 
-        // TO-DO: THIS INTERVAL WILL GENERATE ISSUES BECAUSE THIS FUNCTION IS
-        // BEING USED BY 2 DIFFERENT TIMERS (BREAK & MAIN)
-        pomoInterval = setInterval(updatePomodoro, 250);
+        vars.intervalFunction = setInterval(() => { updatePomodoro(vars, timeElement, playPauseButton) }, 250);
     }
-
-    return vars;
 }
 
-function stopPomodoroBreak() {
-    // TO-DO
+
+function stopPomoBreakButtonClick() {
+    if (!pomoBreakTime.value || !pomoBreakStart.value) return
+    stopPomodoro(pomo_break_vars, pomoBreakTime.value, pomoBreakStart.value);
 }
 
-function stopPomodoro() {
-    pomo_vars.status = 'stop';
+function stopPomoButtonClick() {
+    if (!pomoTime.value || !pomoStart.value) return
+    stopPomodoro(pomo_vars, pomoTime.value, pomoStart.value);
+}
+
+function stopPomodoro(vars: pomoTimer, timeElement: HTMLElement, playPauseButton: HTMLElement) {
+    vars.status = 'stop';
     pomoAlarm.pause();
     pomoAlarm.currentTime = 0;
-    pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
-    if (pomoInterval) clearInterval(pomoInterval);
-    printTime();
+    vars.timeRemain = JSON.parse(JSON.stringify(vars.interval));
+    if (vars.intervalFunction) clearInterval(vars.intervalFunction);
+    printTime(vars, timeElement);
 
-    if (pomoStart.value) setPlayPauseButton(pomoStart.value, 'play');
+    setPlayPauseButton(playPauseButton, 'play');
 }
 
 function convertMsToTime(miliseconds: number): PomoTimeInterface {
@@ -181,42 +155,29 @@ function convertTimeToMS(minutes: number, seconds: number): number {
     return (minutes * 60000) + (seconds * 1000);
 }
 
-function calculateTimeRemain() {
-    let elapsedTimeSinceLastUpdate = new Date().getTime() - pomo_vars.lastUpdateTimestamp;
+function calculateTimeRemain(vars: pomoTimer) {
+    let elapsedTimeSinceLastUpdate = new Date().getTime() - vars.lastUpdateTimestamp;
     let elapsedTimeUpdatedMs =
-        elapsedTimeSinceLastUpdate + pomo_vars.timeElapsed.miliseconds;
+        elapsedTimeSinceLastUpdate + vars.timeElapsed.miliseconds;
 
-    pomo_vars.timeElapsed.miliseconds = elapsedTimeUpdatedMs;
+    vars.timeElapsed.miliseconds = elapsedTimeUpdatedMs;
 
-    let timeRemainMs = pomo_vars.timeRemain.totalInMiliseconds - elapsedTimeUpdatedMs;
+    let timeRemainMs = vars.timeRemain.totalInMiliseconds - elapsedTimeUpdatedMs;
     let timeRemain = convertMsToTime(timeRemainMs);
 
-    pomo_vars.timeRemain.minutes = timeRemain.minutes;
-    pomo_vars.timeRemain.seconds = timeRemain.seconds;
+    vars.timeRemain.minutes = timeRemain.minutes;
+    vars.timeRemain.seconds = timeRemain.seconds;
 
-    pomo_vars.lastUpdateTimestamp = new Date().getTime();
+    vars.lastUpdateTimestamp = new Date().getTime();
 }
 
-function printTime() {
-    if (!pomoTime.value) return;
-
-    let min = pomo_vars.timeRemain.minutes.toString();
+function printTime(vars: pomoTimer,timeElement: HTMLElement) {
+    let min = vars.timeRemain.minutes.toString();
     min = (min.length === 1) ? `0${min}` : min;
-    let sec = pomo_vars.timeRemain.seconds.toString();
+    let sec = vars.timeRemain.seconds.toString();
     sec = (sec.length === 1) ? `0${sec}` : sec;
 
-    pomoTime.value.textContent = `${min}:${sec}`;
-}
-
-function printBreakTime() {
-    if (!pomoBreakTime.value) return;
-
-    let min = pomo_break_vars.timeRemain.minutes.toString();
-    min = (min.length === 1) ? `0${min}` : min;
-    let sec = pomo_break_vars.timeRemain.seconds.toString();
-    sec = (sec.length === 1) ? `0${sec}` : sec;
-
-    pomoBreakTime.value.innerText = `${min}:${sec}`;
+    timeElement.textContent = `${min}:${sec}`;
 }
 
 function setPlayPauseButton(elem: HTMLElement, value: string) {
@@ -224,7 +185,6 @@ function setPlayPauseButton(elem: HTMLElement, value: string) {
         if (value === 'play') {
             elem.querySelector('.pomo-pause-svg')?.classList.add('hidden');
             elem.querySelector('.pomo-play-svg')?.classList.remove('hidden');
-            // cssVars.value.playPauseBackground = `url("${playSvg}")`;
         }
         else if (value === 'pause') {
             elem.querySelector('.pomo-play-svg')?.classList.add('hidden');
@@ -237,30 +197,34 @@ function setPlayPauseButton(elem: HTMLElement, value: string) {
     }
 }
 
-function updatePomodoro() {
-    if (!pomoStart.value) return;
-    if (pomo_vars.status === 'pause' || pomo_vars.status === 'stop' || pomo_vars.status === 'end') {
+function updatePomodoro(vars: pomoTimer, timeElement: HTMLElement, playButton: HTMLElement) {
+    if (vars.status === 'pause' || vars.status === 'stop' || vars.status === 'end') {
         return;
     }
 
-    calculateTimeRemain();
-    printTime();
+    calculateTimeRemain(vars);
+    printTime(vars, timeElement);
 
-    if (pomo_vars.timeRemain.seconds <= 0 && pomo_vars.timeRemain.minutes <= 0) {
-        pomo_vars.timeRemain.seconds = 0;
-        pomo_vars.timeRemain.minutes = 0;
-        pomo_vars.status = 'end';
+    if (vars.timeRemain.seconds <= 0 && vars.timeRemain.minutes <= 0) {
+        vars.timeRemain.seconds = 0;
+        vars.timeRemain.minutes = 0;
+        vars.status = 'end';
 
         pomoAlarm.play();
         pomoEndNotification();
-        setPlayPauseButton(pomoStart.value, 'play');
-        if (pomoInterval)
-            clearInterval(pomoInterval);
+        setPlayPauseButton(playButton, 'play');
+        if (vars.intervalFunction)
+            clearInterval(vars.intervalFunction);
     }
-    else if (pomo_vars.status === 'pause')
-        setPlayPauseButton(pomoStart.value, 'play');
+    else if (vars.status === 'pause')
+        setPlayPauseButton(playButton, 'play');
     else
-        setPlayPauseButton(pomoStart.value, 'pause');
+        setPlayPauseButton(playButton, 'pause');
+}
+
+function hidePomo(pomoWrapper: HTMLElement) {
+    // TO-DO
+    // 
 }
 
 function getNotificationPermission() {
@@ -289,13 +253,13 @@ function pomoEndNotification() {
 function initPomoBreak() {
     pomo_break_vars.timeRemain = JSON.parse(JSON.stringify(pomo_break_vars.interval));
     if (pomoBreakStart.value) setPlayPauseButton(pomoBreakStart.value, 'play');
-    printBreakTime();
+    if (pomoBreakTime.value) printTime(pomo_break_vars, pomoBreakTime.value);
 }
 
 function initPomo() {
     pomo_vars.timeRemain = JSON.parse(JSON.stringify(pomo_vars.interval));
     if (pomoStart.value) setPlayPauseButton(pomoStart.value, 'play');
-    printTime();
+    if (pomoTime.value) printTime(pomo_vars, pomoTime.value);
 }
 
 onMounted(() => {
@@ -312,12 +276,11 @@ onMounted(() => {
             <h1>POMODORO</h1>
             <span class="pomo-time" ref="pomoTime"></span>
             <div class="pom-btns-wrapper">
-                <button class="pomo-start" ref="pomoStart" @click="startPauseMainPomo"
-                    aria-label="Start pomodoro">
+                <button class="pomo-start" ref="pomoStart" @click="startPauseMainPomo" aria-label="Start pomodoro">
                     <playSvg class="pomo-play-svg" />
-                    <pauseSvg class="pomo-pause-svg hidden"/>
+                    <pauseSvg class="pomo-pause-svg hidden" />
                 </button>
-                <button class="pomo-stop" ref="pomoStop" @click="stopPomodoro" aria-label="Stop pomodoro">
+                <button class="pomo-stop" ref="pomoStop" @click="stopPomoButtonClick" aria-label="Stop pomodoro">
                     <stopSvg />
                 </button>
             </div>
@@ -329,9 +292,9 @@ onMounted(() => {
                 <button class="pomo-start" ref="pomoBreakStart" @click="startPauseBreakPomo"
                     aria-label="Start pomodoro">
                     <playSvg class="pomo-play-svg" />
-                    <pauseSvg class="pomo-pause-svg hidden"/>
+                    <pauseSvg class="pomo-pause-svg hidden" />
                 </button>
-                <button class="pomo-stop" ref="pomoBreakStop" @click="stopPomodoroBreak"
+                <button class="pomo-stop" ref="pomoBreakStop" @click="stopPomoBreakButtonClick"
                     aria-label="Stop pomodoro break">
                     <stopSvg />
                 </button>
