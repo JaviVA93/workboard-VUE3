@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { gsap } from 'gsap';
 
 // import playSvg from '../assets/play-button-round-icon.svg';
 // import pauseSvg from '../assets/pause-button-icon.svg';
@@ -73,6 +74,8 @@ const pomoTime = ref<HTMLElement | null>(null),
     pomoBreakTime = ref<HTMLElement | null>(null),
     pomoBreakStart = ref<HTMLElement | null>(null),
     pomoBreakStop = ref<HTMLElement | null>(null),
+    pomoWrapper = ref<HTMLElement | null>(null),
+    pomoBreakWrapper = ref<HTMLElement | null>(null),
     pomoAlarm = new Audio(clockAlarm);
 
 
@@ -171,7 +174,7 @@ function calculateTimeRemain(vars: pomoTimer) {
     vars.lastUpdateTimestamp = new Date().getTime();
 }
 
-function printTime(vars: pomoTimer,timeElement: HTMLElement) {
+function printTime(vars: pomoTimer, timeElement: HTMLElement) {
     let min = vars.timeRemain.minutes.toString();
     min = (min.length === 1) ? `0${min}` : min;
     let sec = vars.timeRemain.seconds.toString();
@@ -223,8 +226,65 @@ function updatePomodoro(vars: pomoTimer, timeElement: HTMLElement, playButton: H
 }
 
 function hidePomo(pomoWrapper: HTMLElement) {
-    // TO-DO
-    // 
+    const play_btn = pomoWrapper.querySelector('.pomo-start'),
+        stop_btn = pomoWrapper.querySelector('.pomo-stop'),
+        pomo_time = pomoWrapper.querySelector('.pomo-time'),
+        pomo_title = pomoWrapper.querySelector('h1');
+    if (!play_btn || !stop_btn || !pomo_time || !pomo_title) return;
+
+    const tl = gsap.timeline();
+    tl.to(pomo_time, { fontSize: '0px', duration: 0.5 });
+    tl.to(play_btn, { width: '0px', height: '0px', duration: 0.5 }, 0.25);
+    tl.to(stop_btn, { width: '0px', height: '0px', duration: 0.5 }, '<');
+    tl.to(pomo_title, { fontSize: '20px', duration: 0.5 }, 0.25);
+    tl.to(pomoWrapper, { gap: 0 }, '<');
+    tl.call(() => { pomoWrapper.setAttribute('hidden', '') });
+}
+
+function showPomo(pomoWrapper: HTMLElement) {
+    const play_btn = pomoWrapper.querySelector('.pomo-start'),
+        stop_btn = pomoWrapper.querySelector('.pomo-stop'),
+        pomo_time = pomoWrapper.querySelector('.pomo-time'),
+        pomo_title = pomoWrapper.querySelector('h1');
+    if (!play_btn || !stop_btn || !pomo_time || !pomo_title) return;
+
+    const tl = gsap.timeline();
+    tl.to(pomo_time, { fontSize: '75px', duration: 0.5 });
+    tl.to(pomo_title, { color: '#2c3e50', duration: 0.5 }, '<');
+    tl.to(play_btn, { width: '35px', height: '35px', duration: 0.5 }, 0.25);
+    tl.to(stop_btn, { width: '35px', height: '35px', duration: 0.5 }, '<');
+    tl.to(pomo_title, { fontSize: '2em', duration: 0.5 }, 0.25);
+    tl.to(pomoWrapper, { gap: 10 }, '<');
+    tl.call(() => {
+        if (pomoWrapper.classList.contains('first-hidden')) 
+            pomoWrapper.classList.remove('first-hidden');
+    });
+}
+
+function hideShowMainPomo() {
+    if (!pomoBreakWrapper.value || !pomoWrapper.value) return;
+
+    if (pomoWrapper.value.getAttribute('hidden') === '') {
+        if (pomoBreakWrapper.value.getAttribute('hidden') !== '') {
+            pomoBreakWrapper.value.setAttribute('hidden', '');
+            hidePomo(pomoBreakWrapper.value);
+        }
+        pomoWrapper.value.removeAttribute('hidden');
+        showPomo(pomoWrapper.value);
+    }
+}
+
+function hideShowBreakPomo() {
+    if (!pomoBreakWrapper.value || !pomoWrapper.value) return;
+
+    if (pomoBreakWrapper.value.getAttribute('hidden') === '') {
+        if (pomoWrapper.value.getAttribute('hidden') !== '') {
+            pomoWrapper.value.setAttribute('hidden', '');
+            hidePomo(pomoWrapper.value);
+        }
+        pomoBreakWrapper.value.removeAttribute('hidden');
+        showPomo(pomoBreakWrapper.value);
+    }
 }
 
 function getNotificationPermission() {
@@ -254,6 +314,7 @@ function initPomoBreak() {
     pomo_break_vars.timeRemain = JSON.parse(JSON.stringify(pomo_break_vars.interval));
     if (pomoBreakStart.value) setPlayPauseButton(pomoBreakStart.value, 'play');
     if (pomoBreakTime.value) printTime(pomo_break_vars, pomoBreakTime.value);
+    if (pomoBreakWrapper.value) hidePomo(pomoBreakWrapper.value);
 }
 
 function initPomo() {
@@ -272,7 +333,7 @@ onMounted(() => {
 
 <template>
     <div class="pomo-card">
-        <div class="pomotime-wrapper">
+        <div class="pomotime-wrapper" ref="pomoWrapper" @click="hideShowMainPomo">
             <h1>POMODORO</h1>
             <span class="pomo-time" ref="pomoTime"></span>
             <div class="pom-btns-wrapper">
@@ -285,9 +346,9 @@ onMounted(() => {
                 </button>
             </div>
         </div>
-        <div class="pomobreak-wrapper">
+        <div class="pomotime-wrapper first-hidden" ref="pomoBreakWrapper" @click="hideShowBreakPomo">
             <h1>BREAK</h1>
-            <span class="pomo-time-break" ref="pomoBreakTime"></span>
+            <span class="pomo-time" ref="pomoBreakTime"></span>
             <div class="pom-btns-wrapper">
                 <button class="pomo-start" ref="pomoBreakStart" @click="startPauseBreakPomo"
                     aria-label="Start pomodoro">
@@ -310,6 +371,7 @@ onMounted(() => {
 
 .pomo-card {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 10px;
@@ -317,6 +379,7 @@ onMounted(() => {
     background-color: aquamarine;
 
     width: 25rem;
+    height: 237px;
     padding: 15px;
 
     border-radius: 5px;
@@ -329,10 +392,44 @@ onMounted(() => {
     justify-content: center;
     gap: 10px;
 }
+.pomotime-wrapper.first-hidden {
+    gap: 0px;
+}
+
+.pomotime-wrapper.first-hidden .pomo-start {
+    width: 0;
+    height: 0;
+}
+
+.pomotime-wrapper.first-hidden .pomo-stop {
+    width: 0;
+    height: 0;
+}
+
+.pomotime-wrapper.first-hidden .pomo-time {
+    font-size: 0px;
+}
+
+.pomotime-wrapper.first-hidden h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #657381;
+}
+
+.pomotime-wrapper[hidden] h1{
+    transition: scale 0.5s, font-weight 0.5s;
+    color: #657381;
+}
+
+.pomotime-wrapper[hidden] h1:hover {
+    scale: 1.2;
+    font-weight: 700;
+}
 
 .pomo-time {
     font-size: 75px;
     font-weight: bold;
+    line-height: 1;
 }
 
 .pom-btns-wrapper {
@@ -358,5 +455,9 @@ onMounted(() => {
     background-repeat: no-repeat;
     background-position: center;
     border: 0;
+}
+
+.hide-pomo h1 {
+    font-size: '20px';
 }
 </style>

@@ -51,7 +51,6 @@ body {
 
 .firt-row-components {
   display: flex;
-  justify-content: space-between;
   margin-bottom: 15px;
   gap: 15px;
 }
