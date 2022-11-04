@@ -81,36 +81,62 @@ const pomoTime = ref<HTMLElement | null>(null),
 
 function startPauseMainPomo() {
     if (!pomoStart.value || !pomoTime.value) return;
-    startPauseResumePomodoro(pomo_vars, pomoStart.value, pomoTime.value);
+    handleStartPauseResumePomodoro(pomo_vars, pomoStart.value, pomoTime.value);
 }
 
 function startPauseBreakPomo() {
     if (!pomoBreakStart.value || !pomoBreakTime.value) return;
-    startPauseResumePomodoro(pomo_break_vars, pomoBreakStart.value, pomoBreakTime.value);
+    handleStartPauseResumePomodoro(pomo_break_vars, pomoBreakStart.value, pomoBreakTime.value);
 }
 
-function startPauseResumePomodoro(vars: pomoTimer, playPauseButton: HTMLElement, timeElement: HTMLElement) {
+function handleStartPauseResumePomodoro(vars: pomoTimer, playPauseButton: HTMLElement, timeElement: HTMLElement) {
     if (vars.status === 'running') {
-        vars.status = 'pause';
-        setPlayPauseButton(playPauseButton, 'play');
-        if (vars.intervalFunction)
-            clearInterval(vars.intervalFunction);
+        setPausePomo(vars, playPauseButton)
+        // vars.status = 'pause';
+        // setPlayPauseButton(playPauseButton, 'play');
+        // if (vars.intervalFunction)
+        //     clearInterval(vars.intervalFunction);
     }
     else {
-        if (vars.status !== 'pause') {
-            vars.timeRemain = JSON.parse(JSON.stringify(vars.interval));
-            vars.timeRemain.totalInMiliseconds =
-                convertTimeToMS(vars.timeRemain.minutes, vars.timeRemain.seconds);
-            vars.timeElapsed.miliseconds = 0;
-        }
-        vars.lastUpdateTimestamp = new Date().getTime();
+        setRunningPomo(vars, playPauseButton, timeElement)
+        // if (vars.status !== 'pause') {
+        //     debugger
+        //     vars.timeRemain = JSON.parse(JSON.stringify(vars.interval));
+        //     vars.timeRemain.totalInMiliseconds =
+        //         convertTimeToMS(vars.timeRemain.minutes, vars.timeRemain.seconds);
+        //     vars.timeElapsed.miliseconds = 0;
+        // }
+        // vars.lastUpdateTimestamp = new Date().getTime();
 
-        vars.status = 'running';
+        // vars.status = 'running';
 
-        setPlayPauseButton(playPauseButton, 'pause');
+        // setPlayPauseButton(playPauseButton, 'pause');
 
-        vars.intervalFunction = setInterval(() => { updatePomodoro(vars, timeElement, playPauseButton) }, 250);
+        // vars.intervalFunction = setInterval(() => { updatePomodoro(vars, timeElement, playPauseButton) }, 250);
     }
+}
+
+function setPausePomo(vars: pomoTimer, playPauseButton: HTMLElement) {
+    vars.status = 'pause';
+    setPlayPauseButton(playPauseButton, 'play');
+    if (vars.intervalFunction)
+        clearInterval(vars.intervalFunction);
+}
+
+function setRunningPomo(vars: pomoTimer, playPauseButton: HTMLElement, timeElement: HTMLElement) {
+    if (vars.status !== 'pause') {
+        vars.timeRemain = JSON.parse(JSON.stringify(vars.interval));
+        vars.timeRemain.totalInMiliseconds =
+            convertTimeToMS(vars.timeRemain.minutes, vars.timeRemain.seconds);
+        vars.timeElapsed.miliseconds = 0;
+    }
+    vars.lastUpdateTimestamp = new Date().getTime();
+
+    vars.status = 'running';
+
+    setPlayPauseButton(playPauseButton, 'pause');
+
+    vars.intervalFunction = setInterval(() => { updatePomodoro(vars, timeElement, playPauseButton) }, 250);
 }
 
 
@@ -234,6 +260,7 @@ function hidePomo(pomoWrapper: HTMLElement) {
 
     const tl = gsap.timeline();
     tl.to(pomo_time, { fontSize: '0px', duration: 0.5 });
+    tl.to(pomo_title, { color: '#657381', duration: 0.5 }, '<');
     tl.to(play_btn, { width: '0px', height: '0px', duration: 0.5 }, 0.25);
     tl.to(stop_btn, { width: '0px', height: '0px', duration: 0.5 }, '<');
     tl.to(pomo_title, { fontSize: '20px', duration: 0.5 }, 0.25);
@@ -256,7 +283,7 @@ function showPomo(pomoWrapper: HTMLElement) {
     tl.to(pomo_title, { fontSize: '2em', duration: 0.5 }, 0.25);
     tl.to(pomoWrapper, { gap: 10 }, '<');
     tl.call(() => {
-        if (pomoWrapper.classList.contains('first-hidden')) 
+        if (pomoWrapper.classList.contains('first-hidden'))
             pomoWrapper.classList.remove('first-hidden');
     });
 }
@@ -268,6 +295,8 @@ function hideShowMainPomo() {
         if (pomoBreakWrapper.value.getAttribute('hidden') !== '') {
             pomoBreakWrapper.value.setAttribute('hidden', '');
             hidePomo(pomoBreakWrapper.value);
+            // TO-DO: Pause the current running pomo
+            // if pomo finished, initialize it
         }
         pomoWrapper.value.removeAttribute('hidden');
         showPomo(pomoWrapper.value);
@@ -281,6 +310,8 @@ function hideShowBreakPomo() {
         if (pomoWrapper.value.getAttribute('hidden') !== '') {
             pomoWrapper.value.setAttribute('hidden', '');
             hidePomo(pomoWrapper.value);
+            // TO-DO: Pause the current running pomo
+            // if pomo finished, initialize it
         }
         pomoBreakWrapper.value.removeAttribute('hidden');
         showPomo(pomoBreakWrapper.value);
@@ -392,6 +423,15 @@ onMounted(() => {
     justify-content: center;
     gap: 10px;
 }
+
+.pomotime-wrapper h1 {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 .pomotime-wrapper.first-hidden {
     gap: 0px;
 }
@@ -416,7 +456,7 @@ onMounted(() => {
     color: #657381;
 }
 
-.pomotime-wrapper[hidden] h1{
+.pomotime-wrapper[hidden] h1 {
     transition: scale 0.5s, font-weight 0.5s;
     color: #657381;
 }
