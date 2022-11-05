@@ -36,8 +36,14 @@ const color_5 = '#1E2E1E';
 
 <template>
   <div class="new-card-form">
-    <input type="text" placeholder="Task title" ref="titleInput" />
-    <input type="text" placeholder="Task description" ref="textInput" />
+    <div class="field-wrapper">
+      <input type="text" ref="titleInput" id="todo-form-title-field" placeholder=" "/>
+      <label for="todo-form-title-field" class="todo-form-label">Task title</label>
+    </div>
+    <div class="field-wrapper">
+      <input type="text" ref="textInput" id="todo-form-text-field" placeholder=" "/>
+      <label for="todo-form-text-field" class="todo-form-label">Task description</label>
+    </div>
     <button @click="createCard">Add task</button>
   </div>
 </template>
@@ -47,42 +53,87 @@ const color_5 = '#1E2E1E';
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 5px;
+
   width: 400px;
+
   background-color: v-bind(color_2);
-  border: 0px;
-  border-radius: 5px;
   box-shadow: -2px 2px 7px v-bind(color_4);
 
-  padding: 5px;
+  border: 0px;
+  border-radius: 5px;
+
+  padding: 15px 5px 5px;
+}
+
+.new-card-form .field-wrapper {
+  width: 100%;
+  position: relative;
+
+  height: 2.5rem;
+  
+  display: flex;
+  align-items: center;
+}
+
+.new-card-form .field-wrapper:nth-child(1) {
+  margin-bottom: 10px;
 }
 
 .new-card-form input {
+  position: absolute;
   font-family: inherit;
   font-size: 1.2rem;
   width: 100%;
-  height: 2.5rem;
+  height: 100%;
   border: 0;
   border-radius: 5px;
   background-color: v-bind(color_1);
-  padding: 0 5px;
+  padding: 8px 16px 0;
 }
 
-.new-card-form input::placeholder {
-  color: v-bind(color_3)
+.new-card-form .todo-form-label {
+  z-index: 1;
+  position: relative;
+  top: 0px;
+  left: 16px;
+
+  background: v-bind(color_1);
+
+  font-weight: 900;
+  color: v-bind(color_3);
+
+  padding: 1px 5px;
+  
+  transition: all 0.5s ease;
+}
+
+.new-card-form .field-wrapper input:focus ~ .todo-form-label {
+  top: -50%;
+  left: 12px;
+  scale: 0.9;
+  background-color: v-bind(color_2);
+  border-radius: 4px;
+}
+
+.new-card-form .field-wrapper input:not(:placeholder-shown) ~ .todo-form-label {
+  top: -50%;
+  left: 12px;
+  scale: 0.9;
+  background-color: v-bind(color_2);
+  border-radius: 4px;
 }
 
 .new-card-form input:focus-visible {
-  outline: 0;
-  border: 0;
+  outline: v-bind(color_3) solid 1px;
 }
 
 .new-card-form button {
   align-self: flex-end;
-
   display: flex;
   align-items: center;
   justify-content: center;
+
+  width: 100px;
 
   color: v-bind(color_2);
   background-color: v-bind(color_4);
@@ -93,8 +144,9 @@ const color_5 = '#1E2E1E';
   border-radius: 3px;
   border: 0;
   padding: 5px;
-  width: 100px;
+  margin-top: 10px;
 }
+
 .new-card-form button:hover {
   background-color: v-bind(color_5);
 }
