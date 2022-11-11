@@ -1,4 +1,4 @@
-# Vue 3 + Typescript + Vite
+# Workboard :)
 
 A simple project to play/learn VUE 3
 
