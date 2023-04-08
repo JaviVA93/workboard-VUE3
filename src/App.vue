@@ -32,13 +32,10 @@ import ToDo from "./components/ToDo/ToDo.vue";
 }
 
 body {
-  background-color: #df57bb2e;
+  background-color: #1a1a1a;
 }
 
 #app {
-  position: absolute;
-  top: 0;
-  left: 0;
   min-height: 100vh;
   width: 100%;
   font-family: 'Dosis', sans-serif;
@@ -57,6 +54,6 @@ body {
 }
 
 .content {
-  margin: 10px;
+  padding: 10px;
 }
 </style>

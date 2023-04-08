@@ -55,7 +55,6 @@ const color_5 = '#1E2E1E';
   flex-direction: column;
   align-items: flex-start;
   gap: 5px;
-  width: 20rem;
   padding: 5px;
   border: 0;
   box-shadow: -2px 2px 7px v-bind(color_3);
@@ -68,11 +67,13 @@ h1 {
   font-size: 2rem;
   line-height: 2rem;
   color: v-bind(color_2);
+  text-align: start;
 }
 
 span {
   color: v-bind(color_1);
   font-size: 1.2rem;
+  margin-bottom: 9px;
 }
 
 button {
@@ -86,6 +87,7 @@ button {
   color: v-bind(color_3);
   background-color: v-bind(color_2);
 
+  margin-top: auto;
   padding: 5px;
   border-radius: 3px;
   border: 0;

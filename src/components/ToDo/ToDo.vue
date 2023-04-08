@@ -56,7 +56,7 @@ const color_5 = '#1E2E1E';
     <h1 class="todo-wrapper-title">TODO</h1>
     <div class="horizontal-line"></div>
     <div class="issues-container">
-      <div v-for="card in issues" :key="card.id">
+      <div v-for="card in issues" :key="card.id" style="max-width: 100%;">
         <Issue @remove-card="removeCard" :id="card.id" :title="card.title" :text="card.text" />
       </div>
     </div>
@@ -74,7 +74,8 @@ const color_5 = '#1E2E1E';
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
+  width: calc(100% - 20px);
+  max-width: 1000px;
 
   display: flex;
   flex-direction: column;
@@ -95,10 +96,11 @@ const color_5 = '#1E2E1E';
 
 .issues-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, 20rem);
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
   row-gap: 10px;
   column-gap: 10px;
   margin: 10px 0;
+  max-width: 100%;
 }
 
 .issues-container .card {
@@ -108,6 +110,13 @@ const color_5 = '#1E2E1E';
 .issue-form-container {
   position: relative;
   width: fit-content;
+  max-width: 100%;
   align-self: flex-start;
+}
+
+@media screen and (max-width: 450px) {
+  .issues-container {
+    grid-template-columns: 100%;
+  }
 }
 </style>

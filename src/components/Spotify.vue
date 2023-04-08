@@ -294,31 +294,32 @@ onMounted(() => {
     font-family: 'Dosis', sans-serif !important;
     background-color: rgb(121, 118, 118);
     width: 450px;
+    max-width: 100%;
     min-height: 200px;
     position: relative;
     border-radius: 5px;
     color: #000000;
     border: 1px solid #000000;
-    padding: 5px;
+    padding: 5px 5px 13px;
 }
 
-.top {
+.spotify-card .top {
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
-.bottom {
+.spotify-card .bottom {
     display: flex;
     align-items: flex-start;
     margin-top: auto;
 }
 
-.spotify-logo {
+.spotify-card .spotify-logo {
     width: 30px;
 }
 
-.spotify-login-btn {
+.spotify-card .spotify-login-btn {
     all: unset;
 
     position: absolute;
@@ -335,37 +336,38 @@ onMounted(() => {
     border-radius: 50px;
 }
 
-.spotify-login-btn:hover {
+.spotify-card .spotify-login-btn:hover {
     background-color: #3d3d3d;
 }
 
-.spotify-login-btn:focus {
+.spotify-card .spotify-login-btn:focus {
     outline: #000000 solid 1px;
     outline-offset: 1px;
 }
 
-.spotify-logout-btn {
+.spotify-card .spotify-logout-btn {
     all: unset;
     margin-left: auto;
     width: 30px;
 }
 
-.spotify-logout-btn:focus svg {
+.spotify-card .spotify-logout-btn:focus svg {
     fill: #3d3d3d;
 }
 
-.player {
+.spotify-card .player {
     display: flex;
     align-items: center;
     gap: 40px;
-    width: fit-content;
+    width: 100%;
 
     position: relative;
-    left: 50%;
-    transform: translateX(-50%);
+    align-self: center;
+
+    padding: 0 20px;
 }
 
-.player_left {
+.spotify-card .player_left {
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -373,39 +375,42 @@ onMounted(() => {
     width: 50%;
 }
 
-.player-artist-name {
+.spotify-card .player-artist-name {
     font-size: 14px;
     font-weight: 700;
 }
 
-.player-img-wrapper {
+.spotify-card .player-img-wrapper {
     width: 150px;
+    max-width: 100%;
     height: 150px;
     position: relative;
 }
 
-.player-track-img {
+.spotify-card .player-track-img {
     position: absolute;
     top: 0;
     left: 0;
-    width: 150px;
-    height: 150px;
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    object-fit: cover;
     box-shadow: #000000 0px 0px 5px;
     border-radius: 10px;
 }
 
-.player-buttons {
+.spotify-card .player-buttons {
     display: flex;
     flex-direction: row;
     gap: 10px;
 }
 
-.player-buttons button {
+.spotify-card .player-buttons button {
     background-color: unset;
     border: 0;
 }
 
-.play-btn {
+.spotify-card .play-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -413,7 +418,27 @@ onMounted(() => {
     background-color: unset;
 }
 
-.play-btn svg {
+.spotify-card .play-btn svg {
     fill: black !important;
+}
+
+@media screen and (max-width: 450px) {
+    .spotify-card .player {
+        width: 100%;
+        gap: 10px;
+        flex-direction: column;
+    }
+
+    .spotify-card .player_left {
+        order: 2;
+    }
+
+    .spotify-card .player-img-wrapper {
+        order: 1;
+    }
+
+    .spotify-card .player_left {
+        width: 100%;
+    }
 }
 </style>

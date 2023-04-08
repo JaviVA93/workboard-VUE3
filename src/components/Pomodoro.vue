@@ -220,7 +220,8 @@ onMounted(() => {
 
     background-color: aquamarine;
 
-    width: 25rem;
+    width: 450px;
+    max-width: 100%;
     padding: 15px;
 
     border-radius: 5px;

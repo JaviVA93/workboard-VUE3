@@ -55,6 +55,7 @@ const color_5 = '#1E2E1E';
   align-items: flex-start;
 
   width: 400px;
+  max-width: 100%;
 
   background-color: v-bind(color_2);
   box-shadow: -2px 2px 7px v-bind(color_4);
