@@ -3,7 +3,7 @@
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
-function generateRandomString(length: Number) {
+function generateRandomString(length: number) {
     var text = '';
     var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -51,7 +51,7 @@ export async function getTrack(track_id: string, token: string) {
 
 export async function createAuthorizedURL() {
     let scope = 'streaming user-read-playback-state user-modify-playback-state user-read-private user-read-email',
-        redirect_uri = 'http://localhost:3000/',
+        redirect_uri = import.meta.env.VITE_SPOTIFY_REDIRECT_URL,
         client_id = import.meta.env.VITE_SPOTIFY_CLIENT_ID,
         rand_state = generateRandomString(64),
         hash_rand_state = await generateCodeChallenge(rand_state);
@@ -76,7 +76,7 @@ export async function requestAccessToken(code: string) {
             client_id: client_id,
             code_verifier: window.localStorage.spotify_auth_code_verifier,
             code: code,
-            redirect_uri: 'http://localhost:3000/',
+            redirect_uri: import.meta.env.VITE_SPOTIFY_REDIRECT_URL,
             grant_type: 'authorization_code'
         });
     const request = await fetch('https://accounts.spotify.com/api/token', {
@@ -87,6 +87,7 @@ export async function requestAccessToken(code: string) {
         body: form_data
     });
 
+    console.log(`Client id: ${client_id}`)
     return await request.json();
 }
 
