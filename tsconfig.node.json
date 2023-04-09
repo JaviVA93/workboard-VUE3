@@ -4,5 +4,6 @@
     "module": "esnext",
     "moduleResolution": "node"
   },
+  "exclude": [],
   "include": ["vite.config.ts"]
 }
