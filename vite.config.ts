@@ -3,5 +3,6 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/workboard-VUE3/',
   plugins: [vue()]
 })
